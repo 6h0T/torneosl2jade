@@ -101,6 +101,10 @@ export const translations = {
     prize1: "10,000 Adena + Arma de Grado S",
     prize2: "5,000 Adena + Armadura de Grado A",
     prize3: "2,500 Adena + Accesorios de Grado B",
+
+    // Add these new translations to the 'es' object
+    pageNotFound: "Página no encontrada",
+    pageNotFoundDesc: "La página que estás buscando no existe o ha sido eliminada.",
   },
   en: {
     // Navbar
@@ -204,6 +208,10 @@ export const translations = {
     prize1: "10,000 Adena + S-Grade Weapon",
     prize2: "5,000 Adena + A-Grade Armor",
     prize3: "2,500 Adena + B-Grade Accessories",
+
+    // Add these new translations to the 'en' object
+    pageNotFound: "Page not found",
+    pageNotFoundDesc: "The page you are looking for does not exist or has been removed.",
   },
   pt: {
     // Navbar
@@ -307,6 +315,10 @@ export const translations = {
     prize1: "10.000 Adena + Arma de Grau S",
     prize2: "5.000 Adena + Armadura de Grau A",
     prize3: "2.500 Adena + Acessórios de Grau B",
+
+    // Add these new translations to the 'pt' object
+    pageNotFound: "Página não encontrada",
+    pageNotFoundDesc: "A página que você está procurando não existe ou foi removida.",
   },
 }
 

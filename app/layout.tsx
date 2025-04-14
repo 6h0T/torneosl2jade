@@ -22,6 +22,7 @@ const modernAntiqua = Modern_Antiqua({
 export const metadata = {
   title: "Lineage 2 - Torneos 3v3",
   description: "Plataforma de torneos 3v3 para Lineage 2",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -44,3 +45,6 @@ export default function RootLayout({
     </html>
   )
 }
+
+
+import './globals.css'

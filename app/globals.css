@@ -1,26 +1,294 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 160 100% 40%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 160 100% 40%;
+
+    --radius: 0.5rem;
+
+    --font-space-grotesk: var(--font-space-grotesk);
+    --font-inter: var(--font-inter);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE y Edge */
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    line-height: 1.5;
+  }
+
+  /* Apply Modern Antiqua to all headings but make them capitalize instead of uppercase */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .card-title,
+  [class*="text-xl"],
+  [class*="text-2xl"],
+  [class*="text-3xl"],
+  [class*="text-4xl"],
+  [class*="text-5xl"] {
+    font-family: var(--font-modern-antiqua), serif;
+    text-transform: capitalize;
+    letter-spacing: 0.05em;
+  }
+
+  /* Apply Inter to paragraphs and other text elements */
+  p,
+  span,
+  div,
+  li,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  label {
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  /* Keep Modern Antiqua for specific decorative elements */
+  .decorative-text {
+    font-family: var(--font-modern-antiqua), serif;
+  }
+}
+
+/* Colores personalizados para la estética de jade */
+@layer utilities {
+  .text-jade-100 {
+    color: #e6fff5;
+  }
+  .text-jade-200 {
+    color: #ccffe9;
+  }
+  .text-jade-300 {
+    color: #99ffdb;
+  }
+  .text-jade-400 {
+    color: #33ffbd;
+  }
+  .text-jade-500 {
+    color: #00e69d;
+  }
+  .text-jade-600 {
+    color: #00b377;
+  }
+  .text-jade-700 {
+    color: #008055;
+  }
+  .text-jade-800 {
+    color: #004d33;
+  }
+  .text-jade-900 {
+    color: #002b1d;
+  }
+
+  .bg-jade-100 {
+    background-color: #e6fff5;
+  }
+  .bg-jade-200 {
+    background-color: #ccffe9;
+  }
+  .bg-jade-300 {
+    background-color: #99ffdb;
+  }
+  .bg-jade-400 {
+    background-color: #33ffbd;
+  }
+  .bg-jade-500 {
+    background-color: #00e69d;
+  }
+  .bg-jade-600 {
+    background-color: #00b377;
+  }
+  .bg-jade-700 {
+    background-color: #008055;
+  }
+  .bg-jade-800 {
+    background-color: #004d33;
+  }
+  .bg-jade-900 {
+    background-color: #002b1d;
+  }
+
+  .border-jade-100 {
+    border-color: #e6fff5;
+  }
+  .border-jade-200 {
+    border-color: #ccffe9;
+  }
+  .border-jade-300 {
+    border-color: #99ffdb;
+  }
+  .border-jade-400 {
+    border-color: #33ffbd;
+  }
+  .border-jade-500 {
+    border-color: #00e69d;
+  }
+  .border-jade-600 {
+    border-color: #00b377;
+  }
+  .border-jade-700 {
+    border-color: #008055;
+  }
+  .border-jade-800 {
+    border-color: #004d33;
+  }
+  .border-jade-900 {
+    border-color: #002b1d;
+  }
+
+  .from-jade-100 {
+    --tw-gradient-from: #e6fff5 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(230 255 245 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-200 {
+    --tw-gradient-from: #ccffe9 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(204 255 233 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-300 {
+    --tw-gradient-from: #99ffdb var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(153 255 219 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-400 {
+    --tw-gradient-from: #33ffbd var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(51 255 189 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-500 {
+    --tw-gradient-from: #00e69d var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(0 230 157 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-600 {
+    --tw-gradient-from: #00b377 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(0 179 119 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-700 {
+    --tw-gradient-from: #008055 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(0 128 85 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-800 {
+    --tw-gradient-from: #004d33 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(0 77 51 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .from-jade-900 {
+    --tw-gradient-from: #002b1d var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(0 43 29 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .to-jade-100 {
+    --tw-gradient-to: #e6fff5 var(--tw-gradient-to-position);
+  }
+  .to-jade-200 {
+    --tw-gradient-to: #ccffe9 var(--tw-gradient-to-position);
+  }
+  .to-jade-300 {
+    --tw-gradient-to: #99ffdb var(--tw-gradient-to-position);
+  }
+  .to-jade-400 {
+    --tw-gradient-to: #33ffbd var(--tw-gradient-to-position);
+  }
+  .to-jade-500 {
+    --tw-gradient-to: #00e69d var(--tw-gradient-to-position);
+  }
+  .to-jade-600 {
+    --tw-gradient-to: #00b377 var(--tw-gradient-to-position);
+  }
+  .to-jade-700 {
+    --tw-gradient-to: #008055 var(--tw-gradient-to-position);
+  }
+  .to-jade-800 {
+    --tw-gradient-to: #004d33 var(--tw-gradient-to-position);
+  }
+  .to-jade-900 {
+    --tw-gradient-to: #002b1d var(--tw-gradient-to-position);
+  }
+
+  /* Para Chrome, Safari y Opera */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Para IE, Edge y Firefox */
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE y Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .font-sans {
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  .font-decorative {
+    font-family: var(--font-modern-antiqua), serif;
+  }
+
+  /* Añadir una clase de utilidad para textos que necesiten estar en mayúsculas */
+  .uppercase-text {
+    text-transform: uppercase;
+  }
+}
+
+/* Aplicar a todo el documento */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE y Edge */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari y Opera */
+}
+
+/* Utility class for Modern Antiqua headings */
+.heading-font {
+  font-family: var(--font-modern-antiqua);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }

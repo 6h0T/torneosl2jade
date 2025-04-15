@@ -54,7 +54,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md bg-black/80 backdrop-blur-sm border-jade-800/30">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-jade-400 text-center">Panel de Administración</CardTitle>
+          <CardTitle className="text-2xl text-forest-400 text-center">Panel de Administración</CardTitle>
           <CardDescription className="text-center">Ingresa tus credenciales para acceder</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -67,14 +67,14 @@ export default function LoginPage() {
             )}
 
             {success && (
-              <div className="p-3 rounded-md bg-jade-900/50 border border-jade-600 flex items-start">
-                <CheckCircle2 className="h-5 w-5 text-jade-400 mr-2 mt-0.5" />
-                <p className="text-jade-200 text-sm">{success}</p>
+              <div className="p-3 rounded-md bg-forest-900/50 border border-forest-600 flex items-start">
+                <CheckCircle2 className="h-5 w-5 text-forest-400 mr-2 mt-0.5" />
+                <p className="text-forest-200 text-sm">{success}</p>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-jade-200">
+              <Label htmlFor="email" className="text-forest-200">
                 Email
               </Label>
               <Input
@@ -84,11 +84,11 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Ingresa tu email"
                 required
-                className="bg-black/50 border-jade-800 focus:border-jade-600 focus:ring-jade-500/30"
+                className="bg-black/50 border-forest-800 focus:border-forest-600 focus:ring-forest-500/30"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-jade-200">
+              <Label htmlFor="password" className="text-forest-200">
                 Contraseña
               </Label>
               <Input
@@ -98,16 +98,12 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Ingresa tu contraseña"
                 required
-                className="bg-black/50 border-jade-800 focus:border-jade-600 focus:ring-jade-500/30"
+                className="bg-black/50 border-forest-800 focus:border-forest-600 focus:ring-forest-500/30"
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button
-              type="submit"
-              className="w-full bg-jade-600 hover:bg-jade-500 text-white shadow-[0_0_10px_rgba(0,255,170,0.3)]"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-forest-600 hover:bg-forest-500 text-white" disabled={isLoading}>
               {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
           </CardFooter>

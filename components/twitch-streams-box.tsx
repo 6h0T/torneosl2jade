@@ -27,6 +27,43 @@ export default function TwitchStreamsBox() {
     const fetchStreamers = async () => {
       try {
         const supabase = createClientComponentClient()
+
+        // If supabase client is null, use example data
+        if (!supabase) {
+          console.warn("Supabase client could not be initialized. Using example data for streamers.")
+          setStreamers([
+            {
+              id: 1,
+              username: "lineage2classic",
+              display_name: "Lineage 2 Classic",
+              profile_image_url:
+                "https://static-cdn.jtvnw.net/jtv_user_pictures/lineage2classic-profile_image-f10d0c7e9e0d7dce-300x300.jpeg",
+              is_live: true,
+              created_at: new Date().toISOString(),
+            },
+            {
+              id: 2,
+              username: "l2tournament",
+              display_name: "L2 Tournament Official",
+              profile_image_url:
+                "https://static-cdn.jtvnw.net/jtv_user_pictures/lineage2-profile_image-d3e9d7a5e3b44654-300x300.png",
+              is_live: false,
+              created_at: new Date().toISOString(),
+            },
+            {
+              id: 3,
+              username: "lineage2",
+              display_name: "Lineage 2",
+              profile_image_url:
+                "https://static-cdn.jtvnw.net/jtv_user_pictures/lineage2-profile_image-d3e9d7a5e3b44654-300x300.png",
+              is_live: false,
+              created_at: new Date().toISOString(),
+            },
+          ])
+          setIsLoading(false)
+          return
+        }
+
         const { data, error } = await supabase
           .from("twitch_streamers")
           .select("*")
@@ -83,24 +120,28 @@ export default function TwitchStreamsBox() {
 
     // Configurar actualización en tiempo real para los streamers
     const supabase = createClientComponentClient()
-    const streamersSubscription = supabase
-      .channel("streamers-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "twitch_streamers",
-        },
-        () => {
-          // Cuando hay cambios, actualizar los datos
-          fetchStreamers()
-        },
-      )
-      .subscribe()
 
-    return () => {
-      supabase.removeChannel(streamersSubscription)
+    // Only set up real-time subscription if supabase client exists
+    if (supabase) {
+      const streamersSubscription = supabase
+        .channel("streamers-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "twitch_streamers",
+          },
+          () => {
+            // Cuando hay cambios, actualizar los datos
+            fetchStreamers()
+          },
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(streamersSubscription)
+      }
     }
   }, [])
 

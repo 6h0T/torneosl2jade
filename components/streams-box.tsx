@@ -29,6 +29,14 @@ export default function StreamsBox() {
     const fetchStreams = async () => {
       try {
         const supabase = createClientComponentClient()
+
+        // If supabase client is null, handle gracefully
+        if (!supabase) {
+          console.warn("Supabase client could not be initialized. Streams feature is disabled.")
+          setIsLoading(false)
+          return
+        }
+
         const { data, error } = await supabase
           .from("streams")
           .select("*")
@@ -52,24 +60,28 @@ export default function StreamsBox() {
 
     // Configurar actualización en tiempo real para las transmisiones
     const supabase = createClientComponentClient()
-    const streamsSubscription = supabase
-      .channel("streams-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "streams",
-        },
-        () => {
-          // Cuando hay cambios, actualizar los datos
-          fetchStreams()
-        },
-      )
-      .subscribe()
 
-    return () => {
-      supabase.removeChannel(streamsSubscription)
+    // Only set up real-time subscription if supabase client exists
+    if (supabase) {
+      const streamsSubscription = supabase
+        .channel("streams-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "streams",
+          },
+          () => {
+            // Cuando hay cambios, actualizar los datos
+            fetchStreams()
+          },
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(streamsSubscription)
+      }
     }
   }, [])
 

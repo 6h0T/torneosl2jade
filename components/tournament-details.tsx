@@ -17,7 +17,6 @@ import {
 import Link from "next/link"
 import TournamentBracket from "@/components/tournament-bracket"
 import TournamentFormatInfo from "@/components/tournament-format-info"
-import TournamentRulesInfo from "@/components/tournament-rules-info"
 import { useLanguage } from "@/contexts/language-context"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -129,7 +128,7 @@ export default function TournamentDetails({
               </div>
 
               {/* Reemplazar la sección de reglas con el componente desplegable */}
-              <TournamentRulesInfo rules={rules} />
+              <TournamentRulesDropdown rules={rules} />
             </CardContent>
           </Card>
         </div>
@@ -291,4 +290,37 @@ function getIconComponent(iconName: string) {
     default:
       return Trophy
   }
+}
+
+function TournamentRulesDropdown({ rules }: { rules: any[] }) {
+  const { t } = useLanguage()
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="pt-4 border-t border-jade-800/30">
+      <Button variant="secondary" className="w-full justify-between items-center" onClick={() => setIsOpen(!isOpen)}>
+        <span className="text-sm font-medium text-forest-400">{t("rules")}</span>
+        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </Button>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="mt-2 space-y-2"
+        >
+          {rules.length > 0 ? (
+            rules.map((rule) => (
+              <div key={rule.id} className="text-sm text-gray-300 leading-relaxed">
+                - {rule.description}
+              </div>
+            ))
+          ) : (
+            <p className="text-amber-400 text-xs italic">{t("noRulesAvailable")}</p>
+          )}
+        </motion.div>
+      )}
+    </div>
+  )
 }

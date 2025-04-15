@@ -25,11 +25,15 @@ export const metadata = {
     generator: 'v0.dev'
 }
 
+// Update the RootLayout component to conditionally render StreamsBox
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Check if Supabase environment variables are available
+  const hasSupabaseEnv = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
   return (
     <html lang="es" suppressHydrationWarning className={`${modernAntiqua.variable} ${inter.variable}`}>
       <body className={`${modernAntiqua.className} text-white min-h-screen flex flex-col hide-scrollbar`}>
@@ -37,7 +41,8 @@ export default function RootLayout({
           <LanguageProvider>
             <Preloader />
             {children}
-            <StreamsBox />
+            {/* Only render StreamsBox if Supabase environment variables are available */}
+            {hasSupabaseEnv && <StreamsBox />}
             <Analytics />
           </LanguageProvider>
         </ThemeProvider>

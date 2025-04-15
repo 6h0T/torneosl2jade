@@ -9,7 +9,7 @@ export default function CopyrightFooter() {
             href="http://www.gh0tstudio.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-jade-400 hover:underline"
+            className="text-forest-400 hover:underline"
           >
             www.gh0tstudio.com
           </a>

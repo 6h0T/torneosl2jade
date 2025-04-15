@@ -18,7 +18,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href="/" className="flex items-center text-jade-400 mb-6 hover:underline">
+      <Link href="/" className="flex items-center text-forest-400 mb-6 hover:underline">
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t("backToMain")}
       </Link>
@@ -26,9 +26,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
       <div className="max-w-md mx-auto">
         <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
           <CardHeader>
-            <CardTitle className="text-xl text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]">
-              {t("teamRegistration")}
-            </CardTitle>
+            <CardTitle className="text-xl text-forest-400">{t("teamRegistration")}</CardTitle>
             <CardDescription>
               {t("completeForm")} {activeTournament.title}
             </CardDescription>
@@ -37,7 +35,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
             <form action={handleRegister} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="teamName" className="text-jade-400">
+                  <Label htmlFor="teamName" className="text-forest-400">
                     {t("teamName")}
                   </Label>
                   <Input
@@ -45,12 +43,12 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                     name="teamName"
                     placeholder={t("teamName")}
                     required
-                    className="bg-black/50 border-jade-800/50 focus:border-jade-400 text-white"
+                    className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
                   />
                 </div>
 
                 <div className="pt-4 border-t border-jade-800/30">
-                  <h3 className="text-sm font-medium mb-4 text-jade-400">{t("teamMembers")}</h3>
+                  <h3 className="text-sm font-medium mb-4 text-forest-400">{t("teamMembers")}</h3>
 
                   {/* Miembro 1 (Líder) */}
                   <div className="space-y-4 mb-6">
@@ -63,7 +61,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                         name="member1Name"
                         placeholder={t("characterName")}
                         required
-                        className="bg-black/50 border-jade-800/50 focus:border-jade-400 text-white"
+                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
                       />
                       <input type="hidden" name="member1Class" value="No especificada" />
                     </div>
@@ -80,7 +78,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                         name="member2Name"
                         placeholder={t("characterName")}
                         required
-                        className="bg-black/50 border-jade-800/50 focus:border-jade-400 text-white"
+                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
                       />
                       <input type="hidden" name="member2Class" value="No especificada" />
                     </div>
@@ -97,7 +95,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                         name="member3Name"
                         placeholder={t("characterName")}
                         required
-                        className="bg-black/50 border-jade-800/50 focus:border-jade-400 text-white"
+                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
                       />
                       <input type="hidden" name="member3Class" value="No especificada" />
                     </div>
@@ -105,10 +103,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-jade-600 hover:bg-jade-700 text-white shadow-[0_0_10px_rgba(0,255,170,0.3)]"
-              >
+              <Button type="submit" className="w-full bg-forest-600 hover:bg-forest-700 text-white">
                 {t("registerTeam")}
               </Button>
             </form>

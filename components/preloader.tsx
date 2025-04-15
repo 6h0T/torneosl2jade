@@ -131,8 +131,7 @@ export default function Preloader() {
               <motion.div
                 className="absolute inset-0 rounded-full"
                 style={{
-                  background: "radial-gradient(circle, rgba(0,179,119,0.2) 0%, rgba(0,0,0,0) 70%)",
-                  boxShadow: "0 0 30px rgba(0,255,170,0.3)",
+                  background: "radial-gradient(circle, rgba(77,158,115,0.2) 0%, rgba(0,0,0,0) 70%)",
                 }}
                 animate={{
                   scale: [1, 1.2, 1],
@@ -158,9 +157,9 @@ export default function Preloader() {
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                   <defs>
                     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#00b377" stopOpacity="0.8" />
-                      <stop offset="50%" stopColor="#33ffbd" stopOpacity="1" />
-                      <stop offset="100%" stopColor="#00b377" stopOpacity="0.8" />
+                      <stop offset="0%" stopColor="#3c7d5c" stopOpacity="0.8" />
+                      <stop offset="50%" stopColor="#78bd95" stopOpacity="1" />
+                      <stop offset="100%" stopColor="#3c7d5c" stopOpacity="0.8" />
                     </linearGradient>
                   </defs>
                   <circle
@@ -186,7 +185,7 @@ export default function Preloader() {
                 }}
               >
                 <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <circle cx="50" cy="50" r="46" fill="none" stroke="#00b377" strokeWidth="1" strokeDasharray="5, 5" />
+                  <circle cx="50" cy="50" r="46" fill="none" stroke="#3c7d5c" strokeWidth="1" strokeDasharray="5, 5" />
                 </svg>
               </motion.div>
 
@@ -201,7 +200,7 @@ export default function Preloader() {
                 }}
               >
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-2 h-2 bg-jade-400 rounded-full shadow-[0_0_8px_rgba(0,255,170,0.8)]" />
+                  <div className="w-2 h-2 bg-forest-400 rounded-full" />
                 </div>
               </motion.div>
 
@@ -215,7 +214,7 @@ export default function Preloader() {
                 }}
               >
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-                  <div className="w-2 h-2 bg-jade-400 rounded-full shadow-[0_0_8px_rgba(0,255,170,0.8)]" />
+                  <div className="w-2 h-2 bg-forest-400 rounded-full" />
                 </div>
               </motion.div>
 
@@ -241,7 +240,7 @@ export default function Preloader() {
             </div>
 
             <motion.h2
-              className="text-2xl font-bold text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)] mb-2"
+              className="text-2xl font-bold text-forest-400 mb-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -250,7 +249,7 @@ export default function Preloader() {
             </motion.h2>
 
             <motion.p
-              className="text-jade-300 text-sm tracking-widest mb-6"
+              className="text-forest-300 text-sm tracking-widest mb-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -261,7 +260,7 @@ export default function Preloader() {
             {/* Barra de progreso */}
             <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-jade-600 to-jade-400"
+                className="h-full bg-gradient-to-r from-forest-600 to-forest-400"
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3 }}
@@ -270,7 +269,7 @@ export default function Preloader() {
 
             {/* Porcentaje */}
             <motion.div
-              className="mt-2 text-xs text-jade-400"
+              className="mt-2 text-xs text-forest-400"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}

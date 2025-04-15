@@ -32,20 +32,20 @@ export default function Navbar({ showRegisterButton = true }: NavbarProps) {
                 priority
               />
             </div>
-            <span className="text-xs text-jade-400 tracking-widest font-medium font-decorative uppercase-text">
+            <span className="text-xs text-forest-400 tracking-widest font-medium font-decorative uppercase-text">
               {t("tournaments")}
             </span>
           </Link>
 
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
-            <Link href="/ranking" className="text-jade-200 hover:text-jade-400 transition-colors">
+            <Link href="/ranking" className="text-forest-200 hover:text-forest-400 transition-colors">
               <Trophy className="inline-block mr-1 h-4 w-4" /> {t("ranking")}
             </Link>
 
             {showRegisterButton ? (
               <Link href="/registro">
-                <Button className="bg-jade-600 hover:bg-jade-500 text-white shadow-[0_0_10px_rgba(0,255,170,0.3)] whitespace-nowrap">
+                <Button className="bg-forest-600 hover:bg-forest-500 text-white whitespace-nowrap">
                   {t("register")}
                 </Button>
               </Link>
@@ -53,7 +53,7 @@ export default function Navbar({ showRegisterButton = true }: NavbarProps) {
               <Link href="/">
                 <Button
                   variant="outline"
-                  className="border-jade-600 text-jade-400 hover:bg-jade-900/50 hover:text-jade-100 hover:border-jade-400 shadow-[0_0_10px_rgba(0,255,170,0.1)] whitespace-nowrap"
+                  className="border-forest-600 text-forest-400 hover:bg-forest-900/50 hover:text-forest-100 hover:border-forest-400 whitespace-nowrap"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   {t("backToHome")}

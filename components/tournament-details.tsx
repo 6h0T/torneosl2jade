@@ -40,7 +40,7 @@ export default function TournamentDetails({
 
   return (
     <div className="container mx-auto px-3 md:px-4 py-6 md:py-8 hide-scrollbar">
-      <Link href="/" className="flex items-center text-jade-400 mb-6 hover:underline">
+      <Link href="/" className="flex items-center text-forest-400 mb-6 hover:underline">
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t("backToTournaments")}
       </Link>
@@ -52,7 +52,7 @@ export default function TournamentDetails({
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-xl text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)] font-decorative">
+                  <CardTitle className="text-xl text-forest-400 font-decorative">
                     {translateContent(tournament.title)}
                   </CardTitle>
                 </div>
@@ -82,7 +82,7 @@ export default function TournamentDetails({
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
-                  <Trophy className="mr-2 h-4 w-4 text-jade-400" />
+                  <Trophy className="mr-2 h-4 w-4 text-forest-400" />
                   <span>
                     {t("prize")}: {translateContent(tournament.prize)}
                   </span>
@@ -124,9 +124,7 @@ export default function TournamentDetails({
               </div>
 
               <div className="pt-4 border-t border-jade-800/30">
-                <h3 className="text-sm font-medium mb-2 text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]">
-                  {t("description")}
-                </h3>
+                <h3 className="text-sm font-medium mb-2 text-forest-400">{t("description")}</h3>
                 <p className="text-sm text-gray-300 leading-relaxed">{translateContent(tournament.description)}</p>
               </div>
 

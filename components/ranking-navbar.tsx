@@ -28,7 +28,7 @@ export default function RankingNavbar() {
                 priority
               />
             </div>
-            <span className="text-xs text-jade-400 tracking-widest font-medium font-decorative uppercase-text">
+            <span className="text-xs text-forest-400 tracking-widest font-medium font-decorative uppercase-text">
               {t("ranking")}
             </span>
           </Link>
@@ -38,7 +38,7 @@ export default function RankingNavbar() {
             <Link href="/">
               <Button
                 variant="outline"
-                className="border-jade-600 text-jade-400 hover:bg-jade-900/50 hover:text-jade-100 hover:border-jade-400 shadow-[0_0_10px_rgba(0,255,170,0.1)] whitespace-nowrap"
+                className="border-forest-600 text-forest-400 hover:bg-forest-900/50 hover:text-forest-100 hover:border-forest-400 whitespace-nowrap"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t("backToHome")}

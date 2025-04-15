@@ -32,7 +32,7 @@ export default function LanguageSwitcher() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 border-jade-800/50 bg-black/50 text-jade-200 hover:bg-jade-900/30 hover:text-jade-100"
+          className={`text-xs ${locale === "es" ? "bg-forest-900/30 text-forest-400" : "bg-black/50 text-forest-200"} border-forest-800/50 hover:bg-forest-900/30 hover:text-forest-100`}
         >
           <Globe className="mr-1 h-3.5 w-3.5" />
           <span className="mr-1">{currentLanguage.name}</span>
@@ -43,7 +43,7 @@ export default function LanguageSwitcher() {
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
-            className={`flex items-center ${locale === language.code ? "text-jade-400" : "text-gray-300"} hover:text-jade-200 cursor-pointer`}
+            className={`flex items-center ${locale === language.code ? "text-forest-400" : "text-gray-300"} hover:text-forest-200 cursor-pointer`}
             onClick={() => handleLanguageChange(language.code)}
           >
             {locale === language.code && <Check className="mr-2 h-4 w-4" />}

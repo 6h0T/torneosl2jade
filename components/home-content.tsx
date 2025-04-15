@@ -23,7 +23,7 @@ export default function HomeContent({
   return (
     <div className="mx-auto px-8 md:px-16 lg:px-24 py-6 max-w-6xl flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
       <div className="mb-6 bg-black/40 backdrop-blur-sm p-4 rounded-lg text-center w-full max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-jade-400 drop-shadow-[0_0_8px_rgba(0,255,170,0.5)] tracking-wide capitalize font-decorative">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-forest-400 tracking-wide capitalize font-decorative">
           {t("tournamentTitle")}
         </h1>
         <p className="text-white text-lg leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
@@ -33,22 +33,22 @@ export default function HomeContent({
       </div>
 
       <Tabs defaultValue="activos" className="w-full">
-        <TabsList className="grid w-full md:w-[400px] grid-cols-3 mb-4 bg-black/80 border border-jade-800/30 mx-auto">
+        <TabsList className="grid w-full md:w-[400px] grid-cols-3 mb-4 bg-black/80 border border-forest-800/30 mx-auto">
           <TabsTrigger
             value="activos"
-            className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100 data-[state=active]:shadow-[0_0_10px_rgba(0,255,170,0.3)]"
+            className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
           >
             {t("active")}
           </TabsTrigger>
           <TabsTrigger
             value="proximos"
-            className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100 data-[state=active]:shadow-[0_0_10px_rgba(0,255,170,0.3)]"
+            className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
           >
             {t("upcoming")}
           </TabsTrigger>
           <TabsTrigger
             value="pasados"
-            className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100 data-[state=active]:shadow-[0_0_10px_rgba(0,255,170,0.3)]"
+            className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
           >
             {t("past")}
           </TabsTrigger>
@@ -78,7 +78,7 @@ export default function HomeContent({
                 )
               })
             ) : (
-              <div className="bg-black/80 backdrop-blur-sm border border-jade-800/30 rounded-lg p-6 text-center">
+              <div className="bg-black/80 backdrop-blur-sm border border-forest-800/30 rounded-lg p-6 text-center">
                 <p className="text-gray-400">{t("noActiveTournaments")}</p>
               </div>
             )}
@@ -103,7 +103,7 @@ export default function HomeContent({
                 />
               ))
             ) : (
-              <div className="bg-black/80 backdrop-blur-sm border border-jade-800/30 rounded-lg p-6 text-center col-span-2">
+              <div className="bg-black/80 backdrop-blur-sm border border-forest-800/30 rounded-lg p-6 text-center col-span-2">
                 <p className="text-gray-400">{t("noUpcomingTournaments")}</p>
               </div>
             )}
@@ -129,7 +129,7 @@ export default function HomeContent({
                 />
               ))
             ) : (
-              <div className="bg-black/80 backdrop-blur-sm border border-jade-800/30 rounded-lg p-6 text-center col-span-3">
+              <div className="bg-black/80 backdrop-blur-sm border border-forest-800/30 rounded-lg p-6 text-center col-span-3">
                 <p className="text-gray-400">{t("noCompletedTournaments")}</p>
               </div>
             )}
@@ -171,15 +171,13 @@ function TournamentCard({
 
   return (
     <Card
-      className={`bg-black/80 backdrop-blur-sm border-jade-800/30 ${
-        featured ? "ring-2 ring-jade-500 shadow-[0_0_15px_rgba(0,230,157,0.3)] border-jade-600" : ""
+      className={`bg-black/80 backdrop-blur-sm border-forest-800/30 ${
+        featured ? "ring-2 ring-forest-500 border-forest-600" : ""
       }`}
     >
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)] capitalize font-decorative">
-            {translateContent(title)}
-          </CardTitle>
+          <CardTitle className="text-forest-400 capitalize font-decorative">{translateContent(title)}</CardTitle>
         </div>
         <CardDescription className="text-gray-300 text-sm leading-relaxed">
           {translateContent(description)}
@@ -193,26 +191,26 @@ function TournamentCard({
           </div>
         </div>
         <div className="flex items-center text-sm">
-          <Users className="mr-2 h-4 w-4 text-jade-400" />
+          <Users className="mr-2 h-4 w-4 text-forest-400" />
           <span>
             {tournament?.format === "1v1" ? t("players") : t("teams")}: {participants}
           </span>
         </div>
         <div className="flex items-center text-sm">
-          <Clock className="mr-2 h-4 w-4 text-jade-400" />
+          <Clock className="mr-2 h-4 w-4 text-forest-400" />
           <span>
             {t("status")}:{" "}
             {isRegistrationOpen ? <span className="text-amber-400 font-medium">{t("registrationsOpen")}</span> : status}
           </span>
         </div>
         <div className="flex items-center text-sm">
-          <Trophy className="mr-2 h-4 w-4 text-jade-400" />
+          <Trophy className="mr-2 h-4 w-4 text-forest-400" />
           <span>
             {t("prize")}: {prize}
           </span>
         </div>
         <div className="flex items-center text-sm">
-          <Award className="mr-2 h-4 w-4 text-jade-400" />
+          <Award className="mr-2 h-4 w-4 text-forest-400" />
           <span>
             {t("registrationType")}:{" "}
             {tournament?.registration_type === "free" ? (
@@ -225,7 +223,7 @@ function TournamentCard({
         {winner && (
           <div className="flex items-center text-sm font-medium">
             <span className="mr-2">{t("winner")}:</span>
-            <span className="text-jade-400">{translateContent(winner)}</span>
+            <span className="text-forest-400">{translateContent(winner)}</span>
           </div>
         )}
       </CardContent>
@@ -233,7 +231,7 @@ function TournamentCard({
         <Link href={`/torneos/${id}`} className="w-full">
           <Button
             variant="outline"
-            className="w-full border-jade-600 text-jade-400 hover:bg-jade-900/50 hover:text-jade-100 hover:border-jade-400 shadow-[0_0_10px_rgba(0,255,170,0.1)]"
+            className="w-full border-forest-600 text-forest-400 hover:bg-forest-900/50 hover:text-forest-100 hover:border-forest-400"
           >
             {isRegistrationOpen ? t("viewTournament") : t("viewDetails")}
           </Button>

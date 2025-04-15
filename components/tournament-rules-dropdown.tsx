@@ -107,60 +107,136 @@ export default function TournamentRulesDropdown({ rules, rawText }: TournamentRu
 
 // Función para procesar el texto de reglas y extraer categorías y reglas
 function processRulesText(text: string): RuleCategory[] {
-  // Dividir el texto por líneas o por puntos específicos
-  const lines = text.split(/\n|(?<=\.)\s+/g).filter((line) => line.trim().length > 0)
+  // Split the text into sections by double newlines or other clear section separators
+  const sections = text.split(/\n\s*\n|\r\n\s*\r\n/).filter((section) => section.trim().length > 0)
 
   const categories: RuleCategory[] = []
   let currentCategory: RuleCategory | null = null
 
-  // Expresiones regulares para detectar categorías
-  const categoryRegex = /^(⚔️\s*)?([^:]+):/
+  // If no clear sections, try to process the entire text
+  if (sections.length === 0) {
+    sections.push(text)
+  }
 
-  lines.forEach((line, index) => {
-    line = line.trim()
+  // Process each section
+  sections.forEach((section, sectionIndex) => {
+    // Split the section into lines
+    const lines = section.split(/\n|\r\n/).filter((line) => line.trim().length > 0)
 
-    // Verificar si la línea es un título de categoría
-    const categoryMatch = line.match(categoryRegex)
+    // Check if the first line looks like a category header
+    const firstLine = lines[0]?.trim()
+    const categoryMatch = firstLine?.match(/^(⚔️\s*)?([^:]+):/)
 
     if (categoryMatch) {
-      // Es un título de categoría
+      // Create a new category
       const categoryTitle = categoryMatch[2].trim()
       currentCategory = {
-        id: `category-${index}`,
+        id: `category-${sectionIndex}`,
         title: categoryTitle,
         rules: [],
       }
       categories.push(currentCategory)
 
-      // Extraer la primera regla si hay contenido después de los dos puntos
-      const firstRule = line.substring(categoryMatch[0].length).trim()
+      // Process the rest of the first line if it contains a rule
+      const firstRule = firstLine.substring(categoryMatch[0].length).trim()
       if (firstRule) {
         currentCategory.rules.push({
-          id: `rule-${index}-0`,
+          id: `rule-${sectionIndex}-0`,
           text: firstRule,
         })
       }
-    } else if (currentCategory) {
-      // Es una regla dentro de la categoría actual
-      currentCategory.rules.push({
-        id: `rule-${index}`,
-        text: line,
+
+      // Process the remaining lines as rules in this category
+      lines.slice(1).forEach((line, lineIndex) => {
+        if (line.trim()) {
+          currentCategory!.rules.push({
+            id: `rule-${sectionIndex}-${lineIndex + 1}`,
+            text: line.trim(),
+          })
+        }
       })
     } else {
-      // Si no hay categoría actual, crear una categoría general
-      currentCategory = {
-        id: "general",
-        title: "Reglas Generales",
-        rules: [
-          {
-            id: `rule-${index}`,
-            text: line,
-          },
-        ],
+      // If no category is found in the first line, check if we're continuing a previous category
+      if (!currentCategory) {
+        // Create a default category if none exists
+        currentCategory = {
+          id: `category-default`,
+          title: "Reglas Generales",
+          rules: [],
+        }
+        categories.push(currentCategory)
       }
-      categories.push(currentCategory)
+
+      // Add all lines as rules to the current category
+      lines.forEach((line, lineIndex) => {
+        if (line.trim()) {
+          currentCategory!.rules.push({
+            id: `rule-${sectionIndex}-${lineIndex}`,
+            text: line.trim(),
+          })
+        }
+      })
     }
   })
+
+  // Special handling for the specific format in the example
+  // Look for patterns like "Restricciones de Equipo:" within rules text
+  if (categories.length === 1 && categories[0].title === "Reglas Generales") {
+    const rules = categories[0].rules
+    const newCategories: RuleCategory[] = []
+    let currentCat: RuleCategory | null = null
+
+    rules.forEach((rule, index) => {
+      const catMatch = rule.text.match(/^(⚔️\s*)?([^:]+):/)
+
+      if (catMatch) {
+        // This rule is actually a category header
+        const catTitle = catMatch[2].trim()
+        currentCat = {
+          id: `detected-category-${index}`,
+          title: catTitle,
+          rules: [],
+        }
+        newCategories.push(currentCat)
+
+        // Check if there's rule text after the category
+        const ruleText = rule.text.substring(catMatch[0].length).trim()
+        if (ruleText) {
+          currentCat.rules.push({
+            id: `detected-rule-${index}-0`,
+            text: ruleText,
+          })
+        }
+      } else if (currentCat) {
+        // Add to current category
+        currentCat.rules.push({
+          id: `detected-rule-${index}`,
+          text: rule.text,
+        })
+      } else {
+        // Create default category if needed
+        if (newCategories.length === 0) {
+          currentCat = {
+            id: "default-category",
+            title: "Reglas Generales",
+            rules: [],
+          }
+          newCategories.push(currentCat)
+        }
+
+        // Add to first category
+        newCategories[0].rules.push({
+          id: `detected-rule-${index}`,
+          text: rule.text,
+        })
+      }
+    })
+
+    // If we found categories this way, use them instead
+    if (newCategories.length > 1 || (newCategories.length === 1 && newCategories[0].rules.length > 0)) {
+      return newCategories
+    }
+  }
 
   return categories
 }

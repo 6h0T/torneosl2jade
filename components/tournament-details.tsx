@@ -22,6 +22,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 
+// Import the proper component
+import TournamentRulesDropdown from "@/components/tournament-rules-dropdown"
+
 export default function TournamentDetails({
   tournament,
   rules,
@@ -290,37 +293,4 @@ function getIconComponent(iconName: string) {
     default:
       return Trophy
   }
-}
-
-function TournamentRulesDropdown({ rules }: { rules: any[] }) {
-  const { t } = useLanguage()
-  const [isOpen, setIsOpen] = useState(false)
-
-  return (
-    <div className="pt-4 border-t border-jade-800/30">
-      <Button variant="secondary" className="w-full justify-between items-center" onClick={() => setIsOpen(!isOpen)}>
-        <span className="text-sm font-medium text-forest-400">{t("rules")}</span>
-        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-      </Button>
-      {isOpen && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="mt-2 space-y-2"
-        >
-          {rules.length > 0 ? (
-            rules.map((rule) => (
-              <div key={rule.id} className="text-sm text-gray-300 leading-relaxed">
-                - {rule.description}
-              </div>
-            ))
-          ) : (
-            <p className="text-amber-400 text-xs italic">{t("noRulesAvailable")}</p>
-          )}
-        </motion.div>
-      )}
-    </div>
-  )
 }

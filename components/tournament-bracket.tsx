@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Clock, Users, Shield } from "lucide-react"
 import { BracketConnector } from "@/components/ui/bracket-connector"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useLanguage } from "@/contexts/language-context"
 import type { Match } from "@/lib/types"
 
 export default function TournamentBracket({ tournamentId }: { tournamentId: number }) {
@@ -23,6 +24,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
     final: [],
   })
   const [isLoading, setIsLoading] = useState(true)
+  const { t, translateContent } = useLanguage()
 
   useEffect(() => {
     async function fetchMatches() {
@@ -109,7 +111,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-jade-400 border-r-transparent"></div>
-          <p className="mt-4 text-jade-300">Cargando bracket del torneo...</p>
+          <p className="mt-4 text-jade-300">{t("loadingTournamentBracket")}</p>
         </div>
       </div>
     )
@@ -125,8 +127,8 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-jade-300 mb-4">El bracket del torneo aún no está disponible.</p>
-          <p className="text-gray-400 text-sm">Los partidos se generarán una vez que se hayan aprobado los equipos.</p>
+          <p className="text-jade-300 mb-4">{t("bracketNotAvailable")}</p>
+          <p className="text-gray-400 text-sm">{t("bracketGeneratedAfterApproval")}</p>
         </div>
       </div>
     )
@@ -135,7 +137,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
   return (
     <div className="w-full">
       <div className="md:hidden mb-4 p-3 bg-black/80 backdrop-blur-sm border border-jade-800/30 rounded-lg text-sm text-jade-300">
-        <p>Para una mejor experiencia, gira tu dispositivo horizontalmente o desliza para ver el bracket completo.</p>
+        <p>{t("bracketMobileInstructions")}</p>
       </div>
       <div className="relative">
         {/* Panel de información del partido seleccionado */}
@@ -166,7 +168,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
                           : "text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]"
                       }`}
                     >
-                      Octavos de Final
+                      {t("roundOf16")}
                     </h3>
                     <div className="space-y-3 flex-grow">
                       {matches.roundOf16.map((match) => (
@@ -207,7 +209,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
                           : "text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]"
                       }`}
                     >
-                      Cuartos de Final
+                      {t("quarterFinals")}
                     </h3>
                     <div className="flex-grow flex flex-col justify-around">
                       {matches.quarterFinals.map((match) => (
@@ -249,7 +251,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
                           : "text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]"
                       }`}
                     >
-                      Semifinales
+                      {t("semiFinals")}
                     </h3>
                     <div className="flex-grow flex flex-col justify-around">
                       {matches.semiFinals.map((match) => (
@@ -284,7 +286,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
               {matches.final.length > 0 && (
                 <div className="w-[170px] z-10 flex flex-col">
                   <h3 className="text-sm font-medium mb-3 text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]">
-                    Final
+                    {t("final")}
                   </h3>
                   <div className="flex-grow flex items-center justify-center">
                     {matches.final.map((match) => (
@@ -321,8 +323,10 @@ interface MatchCardProps {
 }
 
 function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick, isFinal = false }: MatchCardProps) {
-  const team1Name = match.team1?.name || "Por determinar"
-  const team2Name = match.team2?.name || "Por determinar"
+  const { t, translateContent } = useLanguage()
+
+  const team1Name = match.team1?.name || t("toBeDetermined")
+  const team2Name = match.team2?.name || t("toBeDetermined")
   const team1Score = match.team1_score !== null ? match.team1_score : "-"
   const team2Score = match.team2_score !== null ? match.team2_score : "-"
   const winnerName = match.winner?.name || null
@@ -346,7 +350,7 @@ function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick
           <div
             className={`font-medium text-sm ${team1Won ? "text-jade-400" : isCompleted && !team1Won ? "text-gray-500" : ""}`}
           >
-            {team1Name}
+            {translateContent(team1Name)}
           </div>
           <div
             className={`font-medium text-sm ${team1Won ? "text-jade-400" : isCompleted && !team1Won ? "text-gray-500" : ""}`}
@@ -358,7 +362,7 @@ function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick
           <div
             className={`font-medium text-sm ${team2Won ? "text-jade-400" : isCompleted && !team2Won ? "text-gray-500" : ""}`}
           >
-            {team2Name}
+            {translateContent(team2Name)}
           </div>
           <div
             className={`font-medium text-sm ${team2Won ? "text-jade-400" : isCompleted && !team2Won ? "text-gray-500" : ""}`}
@@ -367,7 +371,7 @@ function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick
           </div>
         </div>
         <div className="text-[10px] text-gray-400 flex justify-between items-center pt-1 border-t border-jade-800/20">
-          <span>{match.match_date || "Fecha por definir"}</span>
+          <span>{match.match_date || t("dateToBeDefinedShort")}</span>
           <Badge
             variant="outline"
             className={`text-[10px] px-1 py-0 h-4 ${
@@ -378,13 +382,13 @@ function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick
                   : "text-yellow-400 border-yellow-600"
             }`}
           >
-            {isPending ? "Pendiente" : isCompleted ? "Completado" : "En progreso"}
+            {isPending ? t("pending") : isCompleted ? t("completed") : t("inProgress")}
           </Badge>
         </div>
       </div>
       {isFinal && winnerName && (
         <div className="absolute -top-2 -right-2 bg-jade-600 text-white text-xs px-2 py-1 rounded-full shadow-[0_0_10px_rgba(0,255,170,0.5)]">
-          Campeón
+          {t("champion")}
         </div>
       )}
     </div>
@@ -397,10 +401,12 @@ interface MatchInfoPanelProps {
 }
 
 function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
+  const { t, translateContent } = useLanguage()
+
   if (!match) return null
 
-  const team1Name = match.team1?.name || "Por determinar"
-  const team2Name = match.team2?.name || "Por determinar"
+  const team1Name = match.team1?.name || t("toBeDetermined")
+  const team2Name = match.team2?.name || t("toBeDetermined")
   const team1Score = match.team1_score !== null ? match.team1_score : "-"
   const team2Score = match.team2_score !== null ? match.team2_score : "-"
   const winnerName = match.winner?.name || null
@@ -410,7 +416,7 @@ function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
   return (
     <div className="fixed md:absolute top-0 left-0 md:right-0 md:left-auto w-full md:w-[300px] h-auto max-h-[90vh] md:max-h-none overflow-y-auto bg-black/90 backdrop-blur-md border border-jade-800/30 rounded-lg p-4 z-20 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-medium text-jade-400">Detalles del Partido</h3>
+        <h3 className="text-lg font-medium text-jade-400">{t("matchDetails")}</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
           ✕
         </button>
@@ -419,12 +425,12 @@ function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div className="text-center flex-1">
-            <div className="text-base font-bold">{team1Name}</div>
+            <div className="text-base font-bold">{translateContent(team1Name)}</div>
             <div className="text-2xl mt-2 font-bold text-jade-400">{team1Score}</div>
           </div>
-          <div className="text-gray-400 text-lg px-2">vs</div>
+          <div className="text-gray-400 text-lg px-2">{t("versus")}</div>
           <div className="text-center flex-1">
-            <div className="text-base font-bold">{team2Name}</div>
+            <div className="text-base font-bold">{translateContent(team2Name)}</div>
             <div className="text-2xl mt-2 font-bold text-jade-400">{team2Score}</div>
           </div>
         </div>
@@ -432,11 +438,11 @@ function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="flex items-center">
             <Clock className="h-4 w-4 text-jade-400 mr-2" />
-            <span>{match.match_date || "Fecha por definir"}</span>
+            <span>{match.match_date || t("dateToBeDefinedLong")}</span>
           </div>
           <div className="flex items-center">
             <Shield className="h-4 w-4 text-jade-400 mr-2" />
-            <span>Mejor de 3</span>
+            <span>{t("bestOfThree")}</span>
           </div>
           <div className="flex items-center">
             <Users className="h-4 w-4 text-jade-400 mr-2" />
@@ -445,7 +451,11 @@ function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
           <div className="flex items-center">
             <Trophy className="h-4 w-4 text-jade-400 mr-2" />
             <span>
-              {isCompleted && winnerName ? `Ganador: ${winnerName}` : isPending ? "Por disputar" : "En progreso"}
+              {isCompleted && winnerName
+                ? `${t("winner")}: ${translateContent(winnerName)}`
+                : isPending
+                  ? t("toBeDisputed")
+                  : t("inProgress")}
             </span>
           </div>
         </div>
@@ -453,8 +463,8 @@ function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
         {isPending && (
           <div className="bg-jade-900/30 border border-jade-800/50 rounded p-3 text-xs">
             <p className="text-jade-300">
-              Este partido está programado para el {match.match_date || "una fecha por definir"} a las{" "}
-              {match.match_time || "una hora por definir"}. ¡No te lo pierdas!
+              {t("matchScheduledFor")} {match.match_date || t("dateToBeDefinedLong")} {t("at")}{" "}
+              {match.match_time || t("timeToBeDefinedLong")}. {t("dontMissIt")}
             </p>
           </div>
         )}
@@ -462,7 +472,8 @@ function MatchInfoPanel({ match, onClose }: MatchInfoPanelProps) {
         {isCompleted && winnerName && (
           <div className="bg-black/50 border border-jade-800/50 rounded p-3 text-xs">
             <p className="text-gray-300">
-              <span className="text-jade-400 font-medium">{winnerName}</span> ha avanzado a la siguiente ronda.
+              <span className="text-jade-400 font-medium">{translateContent(winnerName)}</span>{" "}
+              {t("hasAdvancedToNextRound")}
             </p>
           </div>
         )}

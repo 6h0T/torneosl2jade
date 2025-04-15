@@ -24,6 +24,8 @@ import { motion } from "framer-motion"
 
 // Import the proper component
 import TournamentRulesDropdown from "@/components/tournament-rules-dropdown"
+// Add this import at the top
+import TournamentHtmlRules from "@/components/tournament-html-rules"
 
 export default function TournamentDetails({
   tournament,
@@ -130,8 +132,11 @@ export default function TournamentDetails({
                 <p className="text-sm text-gray-300 leading-relaxed">{translateContent(tournament.description)}</p>
               </div>
 
-              {/* Reemplazar la sección de reglas con el componente desplegable */}
-              <TournamentRulesDropdown rules={rules} />
+              {tournament.html_rules ? (
+                <TournamentHtmlRules htmlContent={tournament.html_rules} />
+              ) : (
+                <TournamentRulesDropdown rules={rules} />
+              )}
             </CardContent>
           </Card>
         </div>

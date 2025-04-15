@@ -10,15 +10,19 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { createTournament, updateTournament } from "@/lib/supabase/admin-actions"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import HtmlRulesEditor from "./html-rules-editor"
+import RulesTextProcessor from "./rules-text-processor"
 import type { Tournament, TournamentPrize, TournamentRule } from "@/lib/types"
 
 interface TournamentFormProps {
   tournament?: Tournament
   prizes?: TournamentPrize[]
   rules?: TournamentRule[]
+  htmlRules?: string
 }
 
-export default function TournamentForm({ tournament, prizes = [], rules = [] }: TournamentFormProps) {
+export default function TournamentForm({ tournament, prizes = [], rules = [], htmlRules = "" }: TournamentFormProps) {
   const isEditing = !!tournament
 
   const [formData, setFormData] = useState({
@@ -64,6 +68,7 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
   const [tournamentRules, setTournamentRules] = useState<
     Array<{
       rule: string
+      category?: string
       id?: number
     }>
   >(
@@ -71,14 +76,18 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
       ? rules.map((rule) => ({
           id: rule.id,
           rule: rule.rule,
+          category: rule.category,
         }))
       : [
           {
             rule: "Prohibido el uso de hacks o programas externos.",
+            category: "Reglas Generales",
           },
         ],
   )
 
+  const [currentHtmlRules, setCurrentHtmlRules] = useState(htmlRules || "")
+  const [activeRulesTab, setActiveRulesTab] = useState<string>("text")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
@@ -131,6 +140,7 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
       ...tournamentRules,
       {
         rule: "",
+        category: "Reglas Generales",
       },
     ])
   }
@@ -141,6 +151,21 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
 
   const removeRule = (index: number) => {
     setTournamentRules(tournamentRules.filter((_, i) => i !== index))
+  }
+
+  const handleSaveRules = async (processedRules: { category: string; rule: string }[]) => {
+    setTournamentRules(
+      processedRules.map((rule) => ({
+        rule: rule.rule,
+        category: rule.category,
+      })),
+    )
+    return Promise.resolve()
+  }
+
+  const handleSaveHtmlRules = async (htmlContent: string) => {
+    setCurrentHtmlRules(htmlContent)
+    return Promise.resolve()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,11 +180,13 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
             ...formData,
             prizes: tournamentPrizes,
             rules: tournamentRules,
+            htmlRules: activeRulesTab === "html" ? currentHtmlRules : "",
           })
         : await createTournament({
             ...formData,
             prizes: tournamentPrizes,
             rules: tournamentRules,
+            htmlRules: activeRulesTab === "html" ? currentHtmlRules : "",
           })
 
       setMessage({
@@ -192,8 +219,10 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
         setTournamentRules([
           {
             rule: "Prohibido el uso de hacks o programas externos.",
+            category: "Reglas Generales",
           },
         ])
+        setCurrentHtmlRules("")
       }
     } catch (error) {
       console.error("Error submitting form:", error)
@@ -423,49 +452,29 @@ export default function TournamentForm({ tournament, prizes = [], rules = [] }: 
       <div className="pt-6 border-t border-jade-800/30">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-jade-400">Reglas del Torneo</h3>
-          <Button type="button" onClick={addRule} className="bg-jade-600 hover:bg-jade-500 text-white" size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Añadir Regla
-          </Button>
         </div>
 
-        <div className="space-y-4">
-          {tournamentRules.map((rule, index) => (
-            <div key={index} className="flex gap-3 p-3 border border-jade-800/30 rounded-md">
-              <div className="flex-1">
-                <Label htmlFor={`rule-${index}`} className="text-jade-400 text-sm">
-                  Regla {index + 1}
-                </Label>
-                <Textarea
-                  id={`rule-${index}`}
-                  value={rule.rule}
-                  onChange={(e) => handleRuleChange(index, e.target.value)}
-                  placeholder="Ej: Prohibido el uso de hacks o programas externos."
-                  className="bg-black/50 border-jade-800 focus:border-jade-600 focus:ring-jade-500/30 mt-1"
-                  rows={2}
-                />
-              </div>
-              <div className="flex items-end pb-1">
-                <Button
-                  type="button"
-                  onClick={() => removeRule(index)}
-                  variant="outline"
-                  size="icon"
-                  className="border-red-800 text-red-400 hover:bg-red-900/30"
-                  disabled={tournamentRules.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Tabs value={activeRulesTab} onValueChange={setActiveRulesTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/80 border border-jade-800/30">
+            <TabsTrigger value="text" className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100">
+              Editor de Texto
+            </TabsTrigger>
+            <TabsTrigger value="html" className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100">
+              Editor HTML
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="text-sm text-gray-400 mt-2">
-          <p>
-            Configure las reglas que se mostrarán en la página del torneo. Puede añadir múltiples reglas para diferentes
-            aspectos del torneo.
-          </p>
-        </div>
+          <TabsContent value="text" className="mt-0">
+            <RulesTextProcessor
+              onSaveRules={handleSaveRules}
+              initialText={tournamentRules.map((r) => r.rule).join("\n\n")}
+            />
+          </TabsContent>
+
+          <TabsContent value="html" className="mt-0">
+            <HtmlRulesEditor onSaveRules={handleSaveHtmlRules} initialHtml={currentHtmlRules} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Configuración de premios */}

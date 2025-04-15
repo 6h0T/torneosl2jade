@@ -24,7 +24,9 @@ export async function createTournament(data: {
   }>
   rules: Array<{
     rule: string
+    category?: string
   }>
+  htmlRules?: string // New parameter for HTML rules
 }) {
   try {
     const supabase = createServerComponentClient()
@@ -44,6 +46,7 @@ export async function createTournament(data: {
           status: data.status,
           featured: data.featured,
           registration_type: data.registrationType,
+          html_rules: data.htmlRules || null, // Store HTML rules
         },
       ])
       .select()
@@ -77,10 +80,11 @@ export async function createTournament(data: {
     }
 
     // 3. Insertar las reglas
-    if (data.rules && data.rules.length > 0) {
+    if (data.rules && data.rules.length > 0 && !data.htmlRules) {
       const rulesToInsert = data.rules.map((rule) => ({
         tournament_id: tournamentId,
         rule: rule.rule,
+        category: rule.category || "Reglas Generales",
       }))
 
       const { error: rulesError } = await supabase.from("tournament_rules").insert(rulesToInsert)
@@ -133,7 +137,9 @@ export async function updateTournament(data: {
   rules: Array<{
     id?: number
     rule: string
+    category?: string
   }>
+  htmlRules?: string // New parameter for HTML rules
 }) {
   try {
     const supabase = createServerComponentClient()
@@ -152,6 +158,7 @@ export async function updateTournament(data: {
         status: data.status,
         featured: data.featured,
         registration_type: data.registrationType,
+        html_rules: data.htmlRules || null, // Update HTML rules
       })
       .eq("id", data.id)
 
@@ -197,11 +204,12 @@ export async function updateTournament(data: {
       }
     }
 
-    // 5. Insertar las nuevas reglas
-    if (data.rules && data.rules.length > 0) {
+    // 5. Insertar las nuevas reglas (solo si no se usan reglas HTML)
+    if (data.rules && data.rules.length > 0 && !data.htmlRules) {
       const rulesToInsert = data.rules.map((rule) => ({
         tournament_id: data.id,
         rule: rule.rule,
+        category: rule.category || "Reglas Generales",
       }))
 
       const { error: rulesError } = await supabase.from("tournament_rules").insert(rulesToInsert)

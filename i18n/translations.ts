@@ -7,8 +7,8 @@ export const translations = {
     backToHome: "Volver a inicio",
 
     // Home page
-    tournamentTitle: "Torneos Jade",
-    tournamentSubtitle: "¿Estás listo para llevar tus habilidades al límite?",
+    tournamentTitle: "TORNEOS JADE",
+    tournamentSubtitle: "VIVI EL COMBATE",
     tournamentSubtitle2: "Inscribete o juega con aliados.",
     active: "Activos",
     upcoming: "Próximos",
@@ -171,6 +171,13 @@ export const translations = {
     currentSeason: "Temporada actual",
     endsOn: "Finaliza",
     september: "de septiembre de",
+    registrationSuccess: "¡Registro Exitoso!",
+    registrationSuccessDesc: "Tu equipo ha sido registrado correctamente en el torneo.",
+    thanksForParticipating: "¡Gracias por participar!",
+    pendingApprovalMessage:
+      "Tu equipo está pendiente de aprobación por los administradores del torneo. Serás redirigido a la página del torneo en",
+    seconds: "segundos.",
+    goToTournamentNow: "Ir al torneo ahora",
   },
   en: {
     // Navbar
@@ -180,8 +187,8 @@ export const translations = {
     backToHome: "Back to home",
 
     // Home page
-    tournamentTitle: "Jade Tournaments",
-    tournamentSubtitle: "Are you ready to push your skills to the limit?",
+    tournamentTitle: "JADE TOURNAMENTS",
+    tournamentSubtitle: "LIVE THE COMBAT",
     tournamentSubtitle2: "Register or play with allies.",
     active: "Active",
     upcoming: "Upcoming",
@@ -343,6 +350,13 @@ export const translations = {
     currentSeason: "Current season",
     endsOn: "Ends on",
     september: "September",
+    registrationSuccess: "Registration Successful!",
+    registrationSuccessDesc: "Your team has been successfully registered for the tournament.",
+    thanksForParticipating: "Thank you for participating!",
+    pendingApprovalMessage:
+      "Your team is pending approval by tournament administrators. You will be redirected to the tournament page in",
+    seconds: "seconds.",
+    goToTournamentNow: "Go to tournament now",
   },
   pt: {
     // Navbar
@@ -352,8 +366,8 @@ export const translations = {
     backToHome: "Voltar ao início",
 
     // Home page
-    tournamentTitle: "Torneios Jade",
-    tournamentSubtitle: "Está pronto para levar suas habilidades ao limite?",
+    tournamentTitle: "TORNEIOS JADE",
+    tournamentSubtitle: "VIVA O COMBATE",
     tournamentSubtitle2: "Inscreva-se ou jogue com aliados.",
     active: "Ativos",
     upcoming: "Próximos",
@@ -514,6 +528,13 @@ export const translations = {
     currentSeason: "Temporada atual",
     endsOn: "Termina em",
     september: "de setembro de",
+    registrationSuccess: "Registro bem-sucedido!",
+    registrationSuccessDesc: "Sua equipe foi registrada com sucesso no torneio.",
+    thanksForParticipating: "Obrigado por participar!",
+    pendingApprovalMessage:
+      "Sua equipe está pendente de aprovação pelos administradores do torneio. Você será redirecionado para a página do torneio em",
+    seconds: "segundos.",
+    goToTournamentNow: "Ir para o torneio agora",
   },
 }
 

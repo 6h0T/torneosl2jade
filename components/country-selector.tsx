@@ -10,11 +10,11 @@ import { useLanguage } from "@/contexts/language-context"
 import 'flag-icons/css/flag-icons.min.css'
 
 export interface Country {
-  code: string
-  name: string
-  prefix: string
-  example: string
-  flag: string
+  code: string    // Código ISO del país (ej: "es", "mx")
+  name: string    // Nombre del país
+  prefix: string  // Prefijo telefónico
+  example: string // Ejemplo de número
+  flag: string    // Código del país para flag-icons (mismo que code)
 }
 
 const countries: Country[] = [

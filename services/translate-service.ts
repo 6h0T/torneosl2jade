@@ -281,6 +281,124 @@ const dynamicTranslations: Record<string, Record<Locale, string>> = {
     en: "Registrations until April 30",
     pt: "Inscrições até 30 de abril",
   },
+
+  // Traducciones para reglas HTML
+  "Reglas del Torneo": {
+    es: "Reglas del Torneo",
+    en: "Tournament Rules",
+    pt: "Regras do Torneio",
+  },
+  "Bienvenido al torneo de Lineage 2. A continuación se detallan las reglas que todos los participantes deben seguir:":
+    {
+      es: "Bienvenido al torneo de Lineage 2. A continuación se detallan las reglas que todos los participantes deben seguir:",
+      en: "Welcome to the Lineage 2 tournament. Below are the rules that all participants must follow:",
+      pt: "Bem-vindo ao torneio de Lineage 2. Abaixo estão as regras que todos os participantes devem seguir:",
+    },
+  "Restricciones de Equipo": {
+    es: "Restricciones de Equipo",
+    en: "Equipment Restrictions",
+    pt: "Restrições de Equipamento",
+  },
+  "Solo se podrá utilizar equipo de grado S +3.": {
+    es: "Solo se podrá utilizar equipo de grado S +3.",
+    en: "Only S-grade +3 equipment can be used.",
+    pt: "Apenas equipamento de grau S +3 pode ser usado.",
+  },
+  "No se permite el uso de joyería épica.": {
+    es: "No se permite el uso de joyería épica.",
+    en: "Epic jewelry is not allowed.",
+    pt: "Joias épicas não são permitidas.",
+  },
+  "No se puede usar argumento.": {
+    es: "No se puede usar argumento.",
+    en: "Arguments cannot be used.",
+    pt: "Argumentos não podem ser usados.",
+  },
+  "Tattoos, Spirit y Corpiños están prohibidos.": {
+    es: "Tattoos, Spirit y Corpiños están prohibidos.",
+    en: "Tattoos, Spirit and Bodices are prohibited.",
+    pt: "Tatuagens, Spirit e Corpetes são proibidos.",
+  },
+  "Composición de Equipos": {
+    es: "Composición de Equipos",
+    en: "Team Composition",
+    pt: "Composição de Equipes",
+  },
+  "Solo una clase con habilidades curativas por equipo.": {
+    es: "Solo una clase con habilidades curativas por equipo.",
+    en: "Only one class with healing abilities per team.",
+    pt: "Apenas uma classe com habilidades de cura por equipe.",
+  },
+  "No se permite tener 3 Warriors o 3 Magos en una misma party.": {
+    es: "No se permite tener 3 Warriors o 3 Magos en una misma party.",
+    en: "Having 3 Warriors or 3 Mages in the same party is not allowed.",
+    pt: "Não é permitido ter 3 Warriors ou 3 Magos na mesma party.",
+  },
+  "Es obligatorio tener al menos un Warrior o un Mago en la composición del equipo.": {
+    es: "Es obligatorio tener al menos un Warrior o un Mago en la composición del equipo.",
+    en: "It is mandatory to have at least one Warrior or one Mage in the team composition.",
+    pt: "É obrigatório ter pelo menos um Warrior ou um Mago na composição da equipe.",
+  },
+  "Regla de Resurrección": {
+    es: "Regla de Resurrección",
+    en: "Resurrection Rule",
+    pt: "Regra de Ressurreição",
+  },
+  "Está totalmente prohibido": {
+    es: "Está totalmente prohibido",
+    en: "It is strictly forbidden",
+    pt: "É estritamente proibido",
+  },
+  "dar resurrección durante el combate. El equipo que realice una resurrección será automáticamente descalificado.": {
+    es: "dar resurrección durante el combate. El equipo que realice una resurrección será automáticamente descalificado.",
+    en: "to give resurrection during combat. The team that performs a resurrection will be automatically disqualified.",
+    pt: "dar ressurreição durante o combate. A equipe que realizar uma ressurreição será automaticamente desqualificada.",
+  },
+  "Uso de Pociones": {
+    es: "Uso de Pociones",
+    en: "Potion Usage",
+    pt: "Uso de Poções",
+  },
+  "Se permite el uso ilimitado de pociones de MP y CP.": {
+    es: "Se permite el uso ilimitado de pociones de MP y CP.",
+    en: "Unlimited use of MP and CP potions is allowed.",
+    pt: "É permitido o uso ilimitado de poções de MP e CP.",
+  },
+  "Las pociones de HP están limitadas a 10 por combate.": {
+    es: "Las pociones de HP están limitadas a 10 por combate.",
+    en: "HP potions are limited to 10 per combat.",
+    pt: "As poções de HP estão limitadas a 10 por combate.",
+  },
+  "Condiciones del Área de Combate": {
+    es: "Condiciones del Área de Combate",
+    en: "Combat Area Conditions",
+    pt: "Condições da Área de Combate",
+  },
+  "El área de combate neutraliza los efectos de:": {
+    es: "El área de combate neutraliza los efectos de:",
+    en: "The combat area neutralizes the effects of:",
+    pt: "A área de combate neutraliza os efeitos de:",
+  },
+  Dolls: {
+    es: "Dolls",
+    en: "Dolls",
+    pt: "Dolls",
+  },
+  "Skills evolutivos": {
+    es: "Skills evolutivos",
+    en: "Evolutionary skills",
+    pt: "Habilidades evolutivas",
+  },
+  "Esto garantiza que todos los jugadores estén en igualdad de condiciones.": {
+    es: "Esto garantiza que todos los jugadores estén en igualdad de condiciones.",
+    en: "This ensures that all players are on equal footing.",
+    pt: "Isso garante que todos os jogadores estejam em igualdade de condições.",
+  },
+  "Ejemplo: Si hay un Bishop, no puede haber un Elder en el mismo equipo.": {
+    es: "Ejemplo: Si hay un Bishop, no puede haber un Elder en el mismo equipo.",
+    en: "Example: If there is a Bishop, there cannot be an Elder in the same team.",
+    pt: "Exemplo: Se houver um Bishop, não pode haver um Elder na mesma equipe.",
+  },
 }
 
 /**

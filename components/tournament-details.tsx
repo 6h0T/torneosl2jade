@@ -22,9 +22,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 
-// Import the proper component
+// Import both rules components
 import TournamentRulesDropdown from "@/components/tournament-rules-dropdown"
-// Add this import at the top
 import TournamentHtmlRules from "@/components/tournament-html-rules"
 
 export default function TournamentDetails({
@@ -132,6 +131,7 @@ export default function TournamentDetails({
                 <p className="text-sm text-gray-300 leading-relaxed">{translateContent(tournament.description)}</p>
               </div>
 
+              {/* Use HTML rules if available, otherwise use the category-based rules */}
               {tournament.html_rules ? (
                 <TournamentHtmlRules htmlContent={tournament.html_rules} />
               ) : (
@@ -203,7 +203,7 @@ export default function TournamentDetails({
   )
 }
 
-// Componente para la sección de equipos
+// TeamCard component and other helper functions remain unchanged
 function TeamsSection({ teams }: { teams: any[] }) {
   const { t } = useLanguage()
 
@@ -222,7 +222,6 @@ function TeamsSection({ teams }: { teams: any[] }) {
   )
 }
 
-// Modificar el componente TeamCard para incluir el botón de despliegue
 function TeamCard({ team, index }: { team: any; index: number }) {
   const { t } = useLanguage()
   const [isExpanded, setIsExpanded] = useState(false)
@@ -284,7 +283,6 @@ function TeamCard({ team, index }: { team: any; index: number }) {
   )
 }
 
-// Función para obtener el componente de ícono
 function getIconComponent(iconName: string) {
   switch (iconName) {
     case "trophy":

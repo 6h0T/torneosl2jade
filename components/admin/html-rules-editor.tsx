@@ -1,32 +1,83 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle, CheckCircle2, Shield, Bold, Italic, List } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  AlertCircle,
+  CheckCircle2,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Code,
+  Eye,
+  Save,
+  Shield,
+  ChevronDown,
+  Globe,
+} from "lucide-react"
+import { useLanguage } from "@/contexts/language-context"
+import { translateHtmlContent } from "@/utils/html-translator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Locale } from "@/i18n/translations"
 
 interface HtmlRulesEditorProps {
-  onSaveRules?: (htmlRules: string) => Promise<void>
+  onSaveRules?: (htmlContent: string) => Promise<void>
   initialHtml?: string
 }
 
 export default function HtmlRulesEditor({ onSaveRules, initialHtml = "" }: HtmlRulesEditorProps) {
+  const { locale, t } = useLanguage()
   const [htmlContent, setHtmlContent] = useState(initialHtml)
-  const [previewContent, setPreviewContent] = useState(initialHtml)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewLocale, setPreviewLocale] = useState<Locale>("es")
+  const [translatedContent, setTranslatedContent] = useState(htmlContent)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState<string>("edit")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const handlePreview = () => {
-    setPreviewContent(htmlContent)
-    setActiveTab("preview")
+  useEffect(() => {
+    // Update content when initialHtml changes (e.g., when editing an existing tournament)
+    if (initialHtml) {
+      setHtmlContent(initialHtml)
+    }
+  }, [initialHtml])
+
+  // Traducir el contenido HTML cuando cambia el idioma de vista previa
+  useEffect(() => {
+    if (typeof window !== "undefined" && htmlContent) {
+      const translated = translateHtmlContent(htmlContent, previewLocale)
+      setTranslatedContent(translated)
+    }
+  }, [htmlContent, previewLocale])
+
+  const insertTag = (openTag: string, closeTag: string) => {
+    if (!textareaRef.current) return
+
+    const textarea = textareaRef.current
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = textarea.value.substring(start, end)
+    const beforeText = textarea.value.substring(0, start)
+    const afterText = textarea.value.substring(end)
+
+    const newText = beforeText + openTag + selectedText + closeTag + afterText
+    setHtmlContent(newText)
+
+    // Set cursor position after the inserted content
+    setTimeout(() => {
+      textarea.focus()
+      textarea.selectionStart = start + openTag.length + selectedText.length + closeTag.length
+      textarea.selectionEnd = start + openTag.length + selectedText.length + closeTag.length
+    }, 0)
   }
 
   const handleSaveRules = async () => {
     if (!onSaveRules) return
 
-    setIsProcessing(true)
+    setIsSubmitting(true)
     setMessage(null)
 
     try {
@@ -42,56 +93,40 @@ export default function HtmlRulesEditor({ onSaveRules, initialHtml = "" }: HtmlR
         text: "Error al guardar las reglas HTML. Inténtalo de nuevo.",
       })
     } finally {
-      setIsProcessing(false)
+      setIsSubmitting(false)
     }
   }
 
-  const insertTag = (tag: string) => {
-    const textarea = document.getElementById("html-editor") as HTMLTextAreaElement
-    if (!textarea) return
+  // Plantilla de ejemplo para reglas HTML
+  const exampleTemplate = `
+<h2>Restricciones de Equipo</h2>
+<ul>
+  <li>Solo se podrá utilizar equipo de grado <strong>S +3</strong>.</li>
+  <li>No se permite el uso de joyería épica.</li>
+  <li>No se puede usar argumento.</li>
+  <li><strong>Tattoos, Spirit y Corpiños</strong> están prohibidos.</li>
+  <li>No se podrá utilizar <strong>Skin</strong>.</li>
+</ul>
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = htmlContent.substring(start, end)
-    const beforeText = htmlContent.substring(0, start)
-    const afterText = htmlContent.substring(end)
+<h2>Condiciones del Área de Combate</h2>
+<p>El área de combate neutraliza los efectos de:</p>
+<ul>
+  <li>Dolls</li>
+  <li>Skills evolutivos</li>
+</ul>
+<p>Esto garantiza que todos los jugadores estén en igualdad de condiciones.</p>
 
-    let newText = ""
-    switch (tag) {
-      case "b":
-        newText = `${beforeText}<b>${selectedText}</b>${afterText}`
-        break
-      case "i":
-        newText = `${beforeText}<i>${selectedText}</i>${afterText}`
-        break
-      case "ul":
-        newText = `${beforeText}<ul>\n  <li>${selectedText}</li>\n</ul>${afterText}`
-        break
-      case "li":
-        newText = `${beforeText}<li>${selectedText}</li>${afterText}`
-        break
-      case "br":
-        newText = `${beforeText}<br>${afterText}`
-        break
-      case "h3":
-        newText = `${beforeText}<h3>${selectedText}</h3>${afterText}`
-        break
-      case "p":
-        newText = `${beforeText}<p>${selectedText}</p>${afterText}`
-        break
-      default:
-        newText = htmlContent
-    }
-
-    setHtmlContent(newText)
-    setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + tag.length + 2, end + tag.length + 2)
-    }, 0)
-  }
+<h2>Composición de Equipos</h2>
+<ul>
+  <li>Solo una clase con habilidades curativas por equipo.</li>
+  <li>Ejemplo: Si hay un Bishop, no puede haber un Elder en el mismo equipo.</li>
+  <li>No se permite tener 3 Warriors o 3 Magos en una misma party.</li>
+  <li>Es obligatorio tener al menos un <strong>Warrior</strong> o un <strong>Mago</strong> en la composición del equipo.</li>
+</ul>
+`
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {message && (
         <div
           className={`p-4 rounded-md ${
@@ -111,156 +146,195 @@ export default function HtmlRulesEditor({ onSaveRules, initialHtml = "" }: HtmlR
         </div>
       )}
 
-      <div className="space-y-4">
-        <div className="flex items-center">
-          <Shield className="h-5 w-5 text-forest-400 mr-2" />
-          <h3 className="text-lg font-medium text-forest-400">Editor de Reglas HTML</h3>
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2 mb-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<h2>", "</h2>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            H2
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<h3>", "</h3>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            H3
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<p>", "</p>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            P
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<strong>", "</strong>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<em>", "</em>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<ul>\n  <li>", "</li>\n</ul>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<ol>\n  <li>", "</li>\n</ol>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<li>", "</li>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            LI
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<br>", "")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            BR
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => insertTag("<code>", "</code>")}
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
+          >
+            <Code className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setHtmlContent(exampleTemplate)}
+            className="bg-black/50 border-forest-800 text-amber-400 hover:bg-amber-900/30 ml-auto"
+          >
+            Usar Plantilla
+          </Button>
         </div>
 
-        <p className="text-sm text-gray-300">
-          Utiliza HTML para dar formato a las reglas del torneo. Puedes usar etiquetas como &lt;b&gt;, &lt;i&gt;,
-          &lt;ul&gt;, &lt;li&gt;, &lt;br&gt;, etc.
-        </p>
+        <Textarea
+          ref={textareaRef}
+          value={htmlContent}
+          onChange={(e) => setHtmlContent(e.target.value)}
+          placeholder="Ingresa el código HTML para las reglas del torneo..."
+          className="min-h-[300px] font-mono text-sm bg-black/50 border-forest-800 focus:border-forest-600 focus:ring-forest-500/30"
+        />
 
-        <div className="bg-black/50 border border-forest-800/30 rounded-md p-2">
-          <div className="flex flex-wrap gap-2 mb-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("b")}
-            >
-              <Bold className="h-4 w-4 mr-1" /> Negrita
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("i")}
-            >
-              <Italic className="h-4 w-4 mr-1" /> Cursiva
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("ul")}
-            >
-              <List className="h-4 w-4 mr-1" /> Lista
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("li")}
-            >
-              <List className="h-4 w-4 mr-1" /> Elemento
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("br")}
-            >
-              Salto de línea
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("h3")}
-            >
-              Título
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-forest-600 text-forest-400"
-              onClick={() => insertTag("p")}
-            >
-              Párrafo
-            </Button>
-          </div>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/80 border border-forest-800/30">
-            <TabsTrigger
-              value="edit"
-              className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
-            >
-              Editar HTML
-            </TabsTrigger>
-            <TabsTrigger
-              value="preview"
-              className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
-            >
-              Vista Previa
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="edit" className="mt-0">
-            <textarea
-              id="html-editor"
-              value={htmlContent}
-              onChange={(e) => setHtmlContent(e.target.value)}
-              className="w-full h-[400px] p-4 bg-black/50 border-forest-800 focus:border-forest-600 focus:ring-forest-500/30 font-mono text-sm"
-              placeholder="<h3>Restricciones de Equipo:</h3>
-<ul>
-  <li>Solo se podrá utilizar equipo de grado S +3.</li>
-  <li>No se permite el uso de joyería épica.</li>
-</ul>
-
-<h3>Composición de Equipos:</h3>
-<ul>
-  <li>Solo una clase con habilidades curativas por equipo.</li>
-  <li>No se permite tener 3 Warriors o 3 Magos en una misma party.</li>
-</ul>"
-            ></textarea>
-          </TabsContent>
-
-          <TabsContent value="preview" className="mt-0">
-            <Card className="bg-black/80 backdrop-blur-sm border-forest-800/30">
-              <CardHeader>
-                <CardTitle className="text-forest-400 text-lg">Vista Previa de Reglas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-invert max-w-none">
-                  <div
-                    className="text-gray-300 text-sm space-y-4"
-                    dangerouslySetInnerHTML={{ __html: previewContent }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex space-x-4">
+        <div className="flex justify-between mt-4">
           <Button
-            onClick={handlePreview}
-            className="bg-amber-600 hover:bg-amber-500 text-white"
-            disabled={isProcessing}
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            variant="outline"
+            className="bg-black/50 border-forest-800 text-forest-400 hover:bg-forest-900/30"
           >
-            Vista Previa
+            <Eye className="h-4 w-4 mr-2" />
+            {showPreview ? "Ocultar Vista Previa" : "Vista Previa"}
           </Button>
 
-          <Button
-            onClick={handleSaveRules}
-            className="bg-forest-600 hover:bg-forest-500 text-white"
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Guardando..." : "Guardar Reglas HTML"}
-          </Button>
+          {onSaveRules && (
+            <Button
+              type="button"
+              onClick={handleSaveRules}
+              className="bg-forest-600 hover:bg-forest-500 text-white"
+              disabled={isSubmitting}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {isSubmitting ? "Guardando..." : "Guardar Reglas HTML"}
+            </Button>
+          )}
         </div>
       </div>
+
+      {showPreview && (
+        <Card className="bg-black/80 backdrop-blur-sm border-forest-800/30 mt-4">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-forest-400">Vista Previa</h3>
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-forest-400" />
+                <Tabs
+                  value={previewLocale}
+                  onValueChange={(value) => setPreviewLocale(value as Locale)}
+                  className="w-auto"
+                >
+                  <TabsList className="grid grid-cols-3 h-8 w-auto bg-black/80 border border-forest-800/30">
+                    <TabsTrigger
+                      value="es"
+                      className="px-2 h-6 data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
+                    >
+                      ES
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="en"
+                      className="px-2 h-6 data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
+                    >
+                      EN
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="pt"
+                      className="px-2 h-6 data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
+                    >
+                      PT
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </div>
+            <div className="border border-forest-800/30 rounded-md p-3">
+              <div className="flex items-center justify-between cursor-pointer text-sm">
+                <div className="flex items-center">
+                  <Shield className="mr-2 h-4 w-4 text-jade-400" />
+                  <span className="text-jade-400">{t("rules")}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-amber-400" />
+              </div>
+              <div className="pt-2 pl-6 text-sm">
+                <div
+                  className="prose prose-invert prose-sm max-w-none prose-headings:text-forest-400 prose-headings:text-sm prose-headings:font-medium prose-headings:my-1 prose-p:text-gray-300 prose-p:my-1 prose-p:text-xs prose-li:text-gray-300 prose-li:text-xs prose-ul:my-1 prose-ol:my-1 prose-strong:text-forest-300"
+                  dangerouslySetInnerHTML={{ __html: translatedContent }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

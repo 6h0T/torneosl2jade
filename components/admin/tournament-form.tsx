@@ -10,9 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { createTournament, updateTournament } from "@/lib/supabase/admin-actions"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import HtmlRulesEditor from "./html-rules-editor"
-import RulesTextProcessor from "./rules-text-processor"
 import type { Tournament, TournamentPrize, TournamentRule } from "@/lib/types"
 
 interface TournamentFormProps {
@@ -454,27 +452,10 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
           <h3 className="text-lg font-medium text-jade-400">Reglas del Torneo</h3>
         </div>
 
-        <Tabs value={activeRulesTab} onValueChange={setActiveRulesTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/80 border border-jade-800/30">
-            <TabsTrigger value="text" className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100">
-              Editor de Texto
-            </TabsTrigger>
-            <TabsTrigger value="html" className="data-[state=active]:bg-jade-900/80 data-[state=active]:text-jade-100">
-              Editor HTML
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="text" className="mt-0">
-            <RulesTextProcessor
-              onSaveRules={handleSaveRules}
-              initialText={tournamentRules.map((r) => r.rule).join("\n\n")}
-            />
-          </TabsContent>
-
-          <TabsContent value="html" className="mt-0">
-            <HtmlRulesEditor onSaveRules={handleSaveHtmlRules} initialHtml={currentHtmlRules} />
-          </TabsContent>
-        </Tabs>
+        <div className="w-full">
+          <h3 className="text-lg font-medium text-jade-400 mb-4">Editor de Reglas HTML</h3>
+          <HtmlRulesEditor onSaveRules={handleSaveHtmlRules} initialHtml={currentHtmlRules} />
+        </div>
       </div>
 
       {/* Configuración de premios */}

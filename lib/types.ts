@@ -12,12 +12,14 @@ export interface Tournament {
   featured: boolean
   registration_type?: "free" | "paid"
   created_at: string
+  html_rules?: string // Nuevo campo para reglas HTML
 }
 
 export interface TournamentRule {
   id: number
   tournament_id: number
   rule: string
+  category?: string
 }
 
 export interface TournamentPrize {

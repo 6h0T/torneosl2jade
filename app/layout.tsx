@@ -20,9 +20,24 @@ const modernAntiqua = Modern_Antiqua({
 })
 
 export const metadata = {
-  title: "Lineage 2 - Torneos 3v3",
-  description: "Plataforma de torneos 3v3 para Lineage 2",
-    generator: 'v0.dev'
+  title: "Comunidad Jade - Torneos",
+  description: "Plataforma de torneos de la Comunidad Jade",
+  icons: {
+    icon: [
+      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/images/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/favicon.ico', sizes: '48x48' }
+    ],
+    apple: '/images/apple-touch-icon.png',
+    shortcut: '/images/favicon.ico'
+  },
+  manifest: '/images/site.webmanifest',
+  generator: 'Comunidad Jade',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1
+  },
+  themeColor: '#10B981'
 }
 
 // Update the RootLayout component to conditionally render StreamsBox

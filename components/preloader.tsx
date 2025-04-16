@@ -228,7 +228,7 @@ export default function Preloader() {
                 >
                   <Image
                     src="/images/lineage-logo.png"
-                    alt="Lineage 2"
+                    alt="Comunidad Jade"
                     width={150}
                     height={60}
                     className="object-contain"
@@ -245,7 +245,7 @@ export default function Preloader() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              LINEAGE 2
+              COMUNIDAD JADE
             </motion.h2>
 
             <motion.p

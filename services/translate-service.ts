@@ -288,11 +288,11 @@ const dynamicTranslations: Record<string, Record<Locale, string>> = {
     en: "Tournament Rules",
     pt: "Regras do Torneio",
   },
-  "Bienvenido al torneo de Lineage 2. A continuación se detallan las reglas que todos los participantes deben seguir:":
+  "Bienvenido al torneo de la Comunidad Jade. A continuación se detallan las reglas que todos los participantes deben seguir:":
     {
-      es: "Bienvenido al torneo de Lineage 2. A continuación se detallan las reglas que todos los participantes deben seguir:",
-      en: "Welcome to the Lineage 2 tournament. Below are the rules that all participants must follow:",
-      pt: "Bem-vindo ao torneio de Lineage 2. Abaixo estão as regras que todos os participantes devem seguir:",
+      es: "Bienvenido al torneo de la Comunidad Jade. A continuación se detallan las reglas que todos los participantes deben seguir:",
+      en: "Welcome to the Jade Community tournament. Below are the rules that all participants must follow:",
+      pt: "Bem-vindo ao torneio da Comunidade Jade. Abaixo estão as regras que todos os participantes devem seguir:",
     },
   "Restricciones de Equipo": {
     es: "Restricciones de Equipo",

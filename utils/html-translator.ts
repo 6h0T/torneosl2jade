@@ -8,38 +8,38 @@ import type { Locale } from "@/i18n/translations"
  * @returns El contenido HTML traducido
  */
 export function translateHtmlContent(htmlContent: string, locale: Locale): string {
-  // Si no hay contenido o el idioma es español (idioma base), devolver el contenido original
+  // If there's no content or the language is Spanish (base language), return the original content
   if (!htmlContent || locale === "es") {
     return htmlContent
   }
 
-  // Crear un elemento temporal para parsear el HTML
+  // Create a temporary element to parse the HTML
   const tempDiv = document.createElement("div")
   tempDiv.innerHTML = htmlContent
 
-  // Función recursiva para traducir nodos de texto
+  // Recursive function to translate text nodes
   function translateNode(node: Node) {
-    // Si es un nodo de texto, traducir su contenido
+    // If it's a text node, translate its content
     if (node.nodeType === Node.TEXT_NODE && node.textContent) {
       const text = node.textContent.trim()
       if (text.length > 0) {
-        // Traducir el texto y asignarlo de vuelta al nodo
+        // Translate the text and assign it back to the node
         node.textContent = translateDynamicContent(text, locale)
       }
     }
-    // Si es un elemento, procesar sus hijos
+    // If it's an element, process its children
     else if (node.nodeType === Node.ELEMENT_NODE) {
-      // No traducir el contenido de las etiquetas <code> o <pre>
+      // Don't translate the content of <code> or <pre> tags
       if ((node as Element).tagName.toLowerCase() !== "code" && (node as Element).tagName.toLowerCase() !== "pre") {
-        // Procesar los hijos del nodo
+        // Process the node's children
         node.childNodes.forEach(translateNode)
       }
     }
   }
 
-  // Traducir todos los nodos del contenido
+  // Translate all nodes in the content
   tempDiv.childNodes.forEach(translateNode)
 
-  // Devolver el HTML traducido
+  // Return the translated HTML
   return tempDiv.innerHTML
 }

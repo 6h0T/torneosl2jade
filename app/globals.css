@@ -360,6 +360,26 @@
   .uppercase-text {
     text-transform: uppercase;
   }
+
+  /* Ensure consistent font styling for rules */
+  .prose-headings\:font-medium h1,
+  .prose-headings\:font-medium h2,
+  .prose-headings\:font-medium h3,
+  .prose-headings\:font-medium h4,
+  .prose-headings\:font-medium h5,
+  .prose-headings\:font-medium h6 {
+    font-family: var(--font-inter), system-ui, sans-serif !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+
+  /* Ensure consistent text styling for rules content */
+  .prose p,
+  .prose li,
+  .prose ul,
+  .prose ol {
+    font-family: var(--font-inter), system-ui, sans-serif !important;
+  }
 }
 
 /* Aplicar a todo el documento */

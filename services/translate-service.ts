@@ -399,6 +399,27 @@ const dynamicTranslations: Record<string, Record<Locale, string>> = {
     en: "Example: If there is a Bishop, there cannot be an Elder in the same team.",
     pt: "Exemplo: Se houver um Bishop, não pode haver um Elder na mesma equipe.",
   },
+  "No se podrá utilizar Skin.": {
+    es: "No se podrá utilizar Skin.",
+    en: "Skins cannot be used.",
+    pt: "Skins não podem ser usadas.",
+  },
+  "dar resurrección durante el combate.": {
+    es: "dar resurrección durante el combate.",
+    en: "to give resurrection during combat.",
+    pt: "dar ressurreição durante o combate.",
+  },
+  "El equipo que realice una resurrección será automáticamente descalificado.": {
+    es: "El equipo que realice una resurrección será automáticamente descalificado.",
+    en: "The team that performs a resurrection will be automatically disqualified.",
+    pt: "A equipe que realizar uma ressurreição será automaticamente desqualificada.",
+  },
+  "Está totalmente prohibido dar resurrección durante el combate. El equipo que realice una resurrección será automáticamente descalificado.":
+    {
+      es: "Está totalmente prohibido dar resurrección durante el combate. El equipo que realice una resurrección será automáticamente descalificado.",
+      en: "It is strictly forbidden to give resurrection during combat. The team that performs a resurrection will be automatically disqualified.",
+      pt: "É estritamente proibido dar ressurreição durante o combate. A equipe que realizar uma ressurreição será automaticamente desqualificada.",
+    },
 }
 
 /**

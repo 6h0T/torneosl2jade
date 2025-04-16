@@ -15,7 +15,7 @@ export default function TournamentHtmlRules({ htmlContent }: TournamentHtmlRules
   const [isOpen, setIsOpen] = useState(false)
   const [translatedContent, setTranslatedContent] = useState(htmlContent)
 
-  // Traducir el contenido HTML cuando cambia el idioma o el contenido
+  // Translate the HTML content when the language or content changes
   useEffect(() => {
     if (typeof window !== "undefined" && htmlContent) {
       const translated = translateHtmlContent(htmlContent, locale)
@@ -53,7 +53,7 @@ export default function TournamentHtmlRules({ htmlContent }: TournamentHtmlRules
           >
             <div className="pt-2 pl-6 text-sm">
               <div
-                className="prose prose-invert prose-sm max-w-none prose-headings:text-forest-400 prose-headings:text-sm prose-headings:font-medium prose-headings:my-1 prose-p:text-gray-300 prose-p:my-1 prose-p:text-xs prose-li:text-gray-300 prose-li:text-xs prose-ul:my-1 prose-ol:my-1 prose-strong:text-forest-300"
+                className="prose prose-invert prose-sm max-w-none prose-headings:text-forest-400 prose-headings:font-medium prose-headings:my-2 prose-p:text-gray-300 prose-p:my-2 prose-li:text-gray-300 prose-ul:my-2 prose-ol:my-2 prose-strong:text-forest-300"
                 dangerouslySetInnerHTML={{ __html: translatedContent }}
               />
             </div>

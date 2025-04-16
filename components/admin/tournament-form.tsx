@@ -178,13 +178,13 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
             ...formData,
             prizes: tournamentPrizes,
             rules: tournamentRules,
-            htmlRules: activeRulesTab === "html" ? currentHtmlRules : "",
+            htmlRules: currentHtmlRules, // Always use currentHtmlRules, not conditional on activeRulesTab
           })
         : await createTournament({
             ...formData,
             prizes: tournamentPrizes,
             rules: tournamentRules,
-            htmlRules: activeRulesTab === "html" ? currentHtmlRules : "",
+            htmlRules: currentHtmlRules, // Always use currentHtmlRules, not conditional on activeRulesTab
           })
 
       setMessage({

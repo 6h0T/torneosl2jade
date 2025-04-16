@@ -230,9 +230,13 @@ export async function registerTeam(formData: FormData) {
     }
 
     // Insertar equipo
+    const countryCode = formData.get("countryCode") as string
+    const phoneNumber = formData.get("phoneNumber") as string
+    const teamPhone = `${countryCode} ${phoneNumber}`
+
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
-      .insert([{ name: teamName, tournament_id: activeTournament.id, status: "pending" }])
+      .insert([{ name: teamName, phone: teamPhone, tournament_id: activeTournament.id, status: "pending" }])
       .select()
 
     if (teamError) {

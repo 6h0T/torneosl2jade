@@ -57,6 +57,9 @@ export const translations = {
     characterName: "Nombre del personaje",
     registerTeam: "Registrar Equipo",
     noMembersInfo: "No hay información de miembros disponible.",
+    teamEmail: "Email del Equipo",
+    teamPhone: "Teléfono del Equipo",
+    selectCountry: "Seleccionar país",
 
     // Rules
     rules: "Reglas",
@@ -158,7 +161,7 @@ export const translations = {
     statisticsUpdateAutomatically:
       "Las estadísticas se actualizan automáticamente después de cada partido y torneo finalizado.",
     totalMatchesWon: "Total de partidos ganados",
-    totalMatchesLost: "Total de partidos perdidos",
+    totalMatchesLost: "Total matches lost",
     tournamentParticipations: "Participaciones en torneos",
     seasons: "Temporadas",
     currentSeasonDescription:
@@ -225,6 +228,9 @@ export const translations = {
     characterName: "Character name",
     registerTeam: "Register Team",
     noMembersInfo: "No member information available.",
+    teamEmail: "Team Email",
+    teamPhone: "Team Phone",
+    selectCountry: "Select country",
 
     // Rules
     rules: "Rules",
@@ -392,6 +398,9 @@ export const translations = {
     characterName: "Nome do personagem",
     registerTeam: "Registrar Equipe",
     noMembersInfo: "Nenhuma informação de membros disponível.",
+    teamEmail: "Email da Equipe",
+    teamPhone: "Telefone da Equipe",
+    selectCountry: "Selecionar país",
 
     // Rules
     rules: "Regras",

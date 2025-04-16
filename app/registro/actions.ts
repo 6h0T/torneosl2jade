@@ -11,6 +11,7 @@ interface TeamMember {
 export async function registerTeam(formData: FormData) {
   try {
     const teamName = formData.get("teamName") as string
+    const teamEmail = formData.get("teamEmail") as string
 
     // Obtener datos de los miembros del equipo
     const member1Name = formData.get("member1Name") as string
@@ -36,7 +37,7 @@ export async function registerTeam(formData: FormData) {
     // Insertar equipo
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
-      .insert([{ name: teamName, tournament_id: 1, status: "pending" }])
+      .insert([{ name: teamName, email: teamEmail, tournament_id: 1, status: "pending" }])
       .select()
 
     if (teamError) {

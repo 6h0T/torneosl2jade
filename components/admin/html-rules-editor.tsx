@@ -81,6 +81,7 @@ export default function HtmlRulesEditor({ onSaveRules, initialHtml = "" }: HtmlR
     setMessage(null)
 
     try {
+      // Make sure we're passing the current HTML content
       await onSaveRules(htmlContent)
       setMessage({
         type: "success",

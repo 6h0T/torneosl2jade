@@ -47,6 +47,54 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                   />
                 </div>
 
+                <div className="mt-4 space-y-4">
+                  <Label htmlFor="teamPhone" className="text-forest-400">
+                    {t("teamPhone")}
+                  </Label>
+                  <div className="flex space-x-2">
+                    <select
+                      id="countryCode"
+                      name="countryCode"
+                      className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white rounded-md w-1/3"
+                      required
+                    >
+                      <option value="">-- {t("selectCountry")} --</option>
+                      <option value="+54">🇦🇷 Argentina (+54)</option>
+                      <option value="+591">🇧🇴 Bolivia (+591)</option>
+                      <option value="+55">🇧🇷 Brasil (+55)</option>
+                      <option value="+56">🇨🇱 Chile (+56)</option>
+                      <option value="+57">🇨🇴 Colombia (+57)</option>
+                      <option value="+506">🇨🇷 Costa Rica (+506)</option>
+                      <option value="+53">🇨🇺 Cuba (+53)</option>
+                      <option value="+593">🇪🇨 Ecuador (+593)</option>
+                      <option value="+503">🇸🇻 El Salvador (+503)</option>
+                      <option value="+34">🇪🇸 España (+34)</option>
+                      <option value="+502">🇬🇹 Guatemala (+502)</option>
+                      <option value="+504">🇭🇳 Honduras (+504)</option>
+                      <option value="+52">🇲🇽 México (+52)</option>
+                      <option value="+505">🇳🇮 Nicaragua (+505)</option>
+                      <option value="+507">🇵🇦 Panamá (+507)</option>
+                      <option value="+595">🇵🇾 Paraguay (+595)</option>
+                      <option value="+51">🇵🇪 Perú (+51)</option>
+                      <option value="+1">🇵🇷 Puerto Rico (+1)</option>
+                      <option value="+1">🇩🇴 República Dominicana (+1)</option>
+                      <option value="+598">🇺🇾 Uruguay (+598)</option>
+                      <option value="+58">🇻🇪 Venezuela (+58)</option>
+                      <option value="+1">🇺🇸 Estados Unidos (+1)</option>
+                      <option value="+44">🇬🇧 Reino Unido (+44)</option>
+                      <option value="+351">🇵🇹 Portugal (+351)</option>
+                    </select>
+                    <Input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="tel"
+                      placeholder="123456789"
+                      required
+                      className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white w-2/3"
+                    />
+                  </div>
+                </div>
+
                 <div className="pt-4 border-t border-jade-800/30">
                   <h3 className="text-sm font-medium mb-4 text-forest-400">{t("teamMembers")}</h3>
 

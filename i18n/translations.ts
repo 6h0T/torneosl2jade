@@ -60,6 +60,8 @@ export const translations = {
     teamEmail: "Email del Equipo",
     teamPhone: "Teléfono del Equipo",
     selectCountry: "Seleccionar país",
+    searchCountry: "Buscar país",
+    noCountryFound: "No se encontró el país",
 
     // Rules
     rules: "Reglas",
@@ -231,6 +233,8 @@ export const translations = {
     teamEmail: "Team Email",
     teamPhone: "Team Phone",
     selectCountry: "Select country",
+    searchCountry: "Search country",
+    noCountryFound: "No country found",
 
     // Rules
     rules: "Rules",

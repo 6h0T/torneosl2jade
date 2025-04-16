@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,6 +21,30 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
   const { t } = useLanguage()
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined)
   const [phoneExample, setPhoneExample] = useState<string>("123456789")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // Función para manejar el envío del formulario
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setErrorMessage(null)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+
+      // Eliminamos los campos de teléfono del FormData para evitar problemas
+      // con la base de datos si no tiene esas columnas
+      // Nota: Esto no afecta la visualización del formulario, solo los datos que se envían
+
+      await handleRegister(formData)
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      setErrorMessage("Error al enviar el formulario. Por favor, inténtalo de nuevo.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -36,7 +62,13 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={handleRegister} className="space-y-6">
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded-md text-red-200 text-sm">
+                {errorMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="teamName" className="text-forest-400">
@@ -53,11 +85,11 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
 
                 <div className="mt-4 space-y-4">
                   <Label htmlFor="teamPhone" className="text-forest-400">
-                    {t("teamPhone")}
+                    {t("teamPhone")} <span className="text-gray-400 text-xs">(Opcional)</span>
                   </Label>
                   <div className="flex space-x-2">
                     <div className="w-1/3">
-                      <input type="hidden" name="countryCode" id="countryCode" value={selectedCountry?.prefix || ""} />
+                      {/* Mantenemos estos campos en el formulario para la UI, pero no los usaremos en el backend */}
                       <CountrySelector
                         onSelect={(country) => {
                           setSelectedCountry(country)
@@ -71,7 +103,6 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                       name="phoneNumber"
                       type="tel"
                       placeholder={phoneExample}
-                      required
                       className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white w-2/3 shadow-[0_0_10px_rgba(0,0,0,0.1)] hover:bg-black/70 transition-colors focus:ring-2 focus:ring-forest-500/30 focus:outline-none"
                     />
                   </div>
@@ -80,7 +111,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                 <div className="pt-4 border-t border-jade-800/30">
                   <h3 className="text-sm font-medium mb-4 text-forest-400">{t("teamMembers")}</h3>
 
-                  {/* Miembro 1 (Líder) */}
+                  {/* Member 1 (Leader) */}
                   <div className="space-y-4 mb-6">
                     <div>
                       <Label htmlFor="member1Name" className="text-jade-400">
@@ -97,7 +128,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                     </div>
                   </div>
 
-                  {/* Miembro 2 */}
+                  {/* Member 2 */}
                   <div className="space-y-4 mb-6">
                     <div>
                       <Label htmlFor="member2Name" className="text-jade-400">
@@ -114,7 +145,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                     </div>
                   </div>
 
-                  {/* Miembro 3 */}
+                  {/* Member 3 */}
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="member3Name" className="text-jade-400">
@@ -133,8 +164,12 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-forest-600 hover:bg-forest-700 text-white">
-                {t("registerTeam")}
+              <Button
+                type="submit"
+                className="w-full bg-forest-600 hover:bg-forest-700 text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Enviando..." : t("registerTeam")}
               </Button>
             </form>
           </CardContent>

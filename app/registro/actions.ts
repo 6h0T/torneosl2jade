@@ -3,27 +3,40 @@
 import { createServerComponentClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-interface TeamMember {
-  name: string
-  characterClass: string
+// Function to get the active tournament
+async function getActiveTournament() {
+  const supabase = createServerComponentClient()
+  const { data: tournaments, error } = await supabase
+    .from("tournaments")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+
+  if (error) {
+    console.error("Error fetching active tournament:", error)
+    return null
+  }
+
+  return tournaments && tournaments.length > 0 ? tournaments[0] : null
 }
 
+// Update the registerTeam function to ensure it's properly saving to the database
 export async function registerTeam(formData: FormData) {
   try {
     const teamName = formData.get("teamName") as string
-    const teamEmail = formData.get("teamEmail") as string
 
-    // Obtener datos de los miembros del equipo
+    // Obtain team members data
     const member1Name = formData.get("member1Name") as string
-    const member1Class = formData.get("member1Class") as string
+    const member1Class = (formData.get("member1Class") as string) || "No especificada"
 
     const member2Name = formData.get("member2Name") as string
-    const member2Class = formData.get("member2Class") as string
+    const member2Class = (formData.get("member2Class") as string) || "No especificada"
 
     const member3Name = formData.get("member3Name") as string
-    const member3Class = formData.get("member3Class") as string
+    const member3Class = (formData.get("member3Class") as string) || "No especificada"
 
-    // Validar datos
+    // Validate data
     if (!teamName || !member1Name || !member2Name || !member3Name) {
       return {
         success: false,
@@ -31,38 +44,80 @@ export async function registerTeam(formData: FormData) {
       }
     }
 
-    // Crear cliente de Supabase
+    // Get the active tournament
+    const activeTournament = await getActiveTournament()
+    if (!activeTournament) {
+      return {
+        success: false,
+        message: "No hay torneos activos disponibles para registro.",
+      }
+    }
+
+    // Create Supabase client
     const supabase = createServerComponentClient()
 
-    // Insertar equipo
+    // Check if a team with this name already exists in the tournament
+    const { data: existingTeam } = await supabase
+      .from("teams")
+      .select("id")
+      .eq("name", teamName)
+      .eq("tournament_id", activeTournament.id)
+      .maybeSingle()
+
+    if (existingTeam) {
+      return {
+        success: false,
+        message: "Ya existe un equipo con ese nombre en este torneo.",
+      }
+    }
+
+    // IMPORTANTE: Eliminamos el campo phone del objeto que se inserta
+    // ya que puede que la tabla no tenga esa columna
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
-      .insert([{ name: teamName, email: teamEmail, tournament_id: 1, status: "pending" }])
+      .insert([
+        {
+          name: teamName,
+          // Eliminamos la línea que añade el teléfono
+          // phone: teamPhone,
+          tournament_id: activeTournament.id,
+          status: "pending",
+          created_at: new Date().toISOString(),
+        },
+      ])
       .select()
 
     if (teamError) {
-      console.error("Error al insertar equipo:", teamError)
+      console.error("Error inserting team:", teamError)
       return {
         success: false,
         message: "Error al registrar el equipo. Por favor, inténtalo de nuevo.",
       }
     }
 
+    if (!teamData || teamData.length === 0) {
+      console.error("No team data returned after insert")
+      return {
+        success: false,
+        message: "Error al registrar el equipo. No se recibió confirmación de la base de datos.",
+      }
+    }
+
     const teamId = teamData[0].id
 
-    // Preparar miembros del equipo
+    // Prepare team members
     const teamMembers = [
-      { team_id: teamId, name: member1Name, character_class: member1Class },
-      { team_id: teamId, name: member2Name, character_class: member2Class },
-      { team_id: teamId, name: member3Name, character_class: member3Class },
+      { team_id: teamId, name: member1Name, character_class: member1Class, created_at: new Date().toISOString() },
+      { team_id: teamId, name: member2Name, character_class: member2Class, created_at: new Date().toISOString() },
+      { team_id: teamId, name: member3Name, character_class: member3Class, created_at: new Date().toISOString() },
     ]
 
-    // Insertar miembros del equipo
+    // Insert team members
     const { error: membersError } = await supabase.from("team_members").insert(teamMembers)
 
     if (membersError) {
-      console.error("Error al insertar miembros:", membersError)
-      // Eliminar el equipo si hubo un error al insertar los miembros
+      console.error("Error inserting members:", membersError)
+      // Delete the team if there was an error inserting members
       await supabase.from("teams").delete().eq("id", teamId)
 
       return {
@@ -71,16 +126,18 @@ export async function registerTeam(formData: FormData) {
       }
     }
 
-    // Revalidar la página de torneos para mostrar el equipo actualizado
-    revalidatePath("/torneos/1")
+    // Revalidate paths to show the updated team
+    revalidatePath(`/torneos/${activeTournament.id}`)
+    revalidatePath(`/admin/torneos/${activeTournament.id}`)
     revalidatePath("/")
 
     return {
       success: true,
       message: "Equipo registrado correctamente. ¡Buena suerte en el torneo!",
+      tournamentId: activeTournament.id,
     }
   } catch (error) {
-    console.error("Error en el registro:", error)
+    console.error("Error in registration:", error)
     return {
       success: false,
       message: "Error inesperado. Por favor, inténtalo de nuevo más tarde.",

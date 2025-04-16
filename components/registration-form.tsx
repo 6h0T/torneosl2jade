@@ -33,9 +33,10 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
     try {
       const formData = new FormData(e.currentTarget)
 
-      // Eliminamos los campos de teléfono del FormData para evitar problemas
-      // con la base de datos si no tiene esas columnas
-      // Nota: Esto no afecta la visualización del formulario, solo los datos que se envían
+      // Asegurarnos de que el código de país se incluya en el FormData
+      if (selectedCountry) {
+        formData.set("countryCode", selectedCountry.prefix)
+      }
 
       await handleRegister(formData)
     } catch (error) {
@@ -89,7 +90,6 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                   </Label>
                   <div className="flex space-x-2">
                     <div className="w-1/3">
-                      {/* Mantenemos estos campos en el formulario para la UI, pero no los usaremos en el backend */}
                       <CountrySelector
                         onSelect={(country) => {
                           setSelectedCountry(country)

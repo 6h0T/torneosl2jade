@@ -24,6 +24,8 @@ async function getActiveTournament() {
 // Update the registerTeam function to ensure it's properly saving to the database
 export async function registerTeam(formData: FormData) {
   try {
+    console.log("Starting team registration process")
+
     const teamName = formData.get("teamName") as string
 
     // Obtain team members data
@@ -36,8 +38,22 @@ export async function registerTeam(formData: FormData) {
     const member3Name = formData.get("member3Name") as string
     const member3Class = (formData.get("member3Class") as string) || "No especificada"
 
+    // Get phone data
+    const countryCode = formData.get("countryCode") as string
+    const phoneNumber = formData.get("phoneNumber") as string
+
+    console.log("Form data extracted:", {
+      teamName,
+      member1Name,
+      member2Name,
+      member3Name,
+      countryCode,
+      phoneNumber,
+    })
+
     // Validate data
     if (!teamName || !member1Name || !member2Name || !member3Name) {
+      console.log("Validation failed: Missing required fields")
       return {
         success: false,
         message: "Por favor, completa todos los campos obligatorios.",
@@ -47,39 +63,56 @@ export async function registerTeam(formData: FormData) {
     // Get the active tournament
     const activeTournament = await getActiveTournament()
     if (!activeTournament) {
+      console.log("No active tournaments found")
       return {
         success: false,
         message: "No hay torneos activos disponibles para registro.",
       }
     }
 
+    console.log("Active tournament found:", activeTournament.id)
+
     // Create Supabase client
     const supabase = createServerComponentClient()
+    if (!supabase) {
+      console.error("Failed to create Supabase client")
+      return {
+        success: false,
+        message: "Error de conexión con la base de datos.",
+      }
+    }
 
     // Check if a team with this name already exists in the tournament
-    const { data: existingTeam } = await supabase
+    const { data: existingTeam, error: existingTeamError } = await supabase
       .from("teams")
       .select("id")
       .eq("name", teamName)
       .eq("tournament_id", activeTournament.id)
       .maybeSingle()
 
+    if (existingTeamError) {
+      console.error("Error checking existing team:", existingTeamError)
+    }
+
     if (existingTeam) {
+      console.log("Team with this name already exists")
       return {
         success: false,
         message: "Ya existe un equipo con ese nombre en este torneo.",
       }
     }
 
-    // IMPORTANTE: Eliminamos el campo phone del objeto que se inserta
-    // ya que puede que la tabla no tenga esa columna
+    // Format phone number (only if both countryCode and phoneNumber are provided)
+    const teamPhone = countryCode && phoneNumber ? `${countryCode} ${phoneNumber}` : null
+    console.log("Formatted phone number:", teamPhone)
+
+    // Insert team with phone number
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
       .insert([
         {
           name: teamName,
-          // Eliminamos la línea que añade el teléfono
-          // phone: teamPhone,
+          phone: teamPhone, // Now including the phone field
           tournament_id: activeTournament.id,
           status: "pending",
           created_at: new Date().toISOString(),
@@ -91,7 +124,7 @@ export async function registerTeam(formData: FormData) {
       console.error("Error inserting team:", teamError)
       return {
         success: false,
-        message: "Error al registrar el equipo. Por favor, inténtalo de nuevo.",
+        message: "Error al registrar el equipo: " + teamError.message,
       }
     }
 
@@ -104,6 +137,7 @@ export async function registerTeam(formData: FormData) {
     }
 
     const teamId = teamData[0].id
+    console.log("Team inserted with ID:", teamId)
 
     // Prepare team members
     const teamMembers = [
@@ -122,11 +156,12 @@ export async function registerTeam(formData: FormData) {
 
       return {
         success: false,
-        message: "Error al registrar los miembros del equipo. Por favor, inténtalo de nuevo.",
+        message: "Error al registrar los miembros del equipo: " + membersError.message,
       }
     }
 
     // Revalidate paths to show the updated team
+    console.log("Registration successful, revalidating paths")
     revalidatePath(`/torneos/${activeTournament.id}`)
     revalidatePath(`/admin/torneos/${activeTournament.id}`)
     revalidatePath("/")

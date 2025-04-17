@@ -244,6 +244,15 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
             <p className="text-gray-300">
               ¿Estás seguro de que deseas aprobar el equipo <span className="font-bold">{selectedTeam?.name}</span>?
             </p>
+            
+            {selectedTeam?.phone && (
+              <div className="mt-3 p-3 bg-forest-900/20 border border-forest-800/50 rounded-md">
+                <p className="text-gray-300 text-sm">
+                  <span className="text-forest-400 font-semibold">Contacto:</span> {selectedTeam.phone}
+                </p>
+              </div>
+            )}
+            
             <p className="text-gray-400 text-sm mt-2">
               Al aprobar el equipo, podrá participar en el torneo y aparecerá en el bracket.
             </p>
@@ -278,6 +287,15 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
             <p className="text-gray-300">
               ¿Estás seguro de que deseas rechazar el equipo <span className="font-bold">{selectedTeam?.name}</span>?
             </p>
+            
+            {selectedTeam?.phone && (
+              <div className="p-3 bg-red-900/20 border border-red-800/50 rounded-md">
+                <p className="text-gray-300 text-sm">
+                  <span className="text-red-400 font-semibold">Contacto:</span> {selectedTeam.phone}
+                </p>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="rejectionReason" className="text-gray-300">
                 Motivo del rechazo

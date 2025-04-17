@@ -951,36 +951,81 @@ export async function changeTeamStatus(data: {
       throw new Error("No se pudo crear el cliente de Supabase")
     }
 
+    // Verificar si el equipo está siendo referenciado en partidos
+    const { data: matchesData, error: matchesError } = await supabase
+      .from("matches")
+      .select("id")
+      .or(`team1_id.eq.${data.teamId},team2_id.eq.${data.teamId}`);
+    
+    if (matchesError) {
+      console.error("Error al verificar partidos relacionados:", matchesError);
+      return {
+        success: false,
+        message: "Error al verificar si el equipo está en partidos: " + matchesError.message,
+      };
+    }
+    
+    // Si hay partidos que referencian al equipo, actualizar esas referencias a null
+    if (matchesData && matchesData.length > 0) {
+      console.log(`Actualizando ${matchesData.length} partidos relacionados con el equipo ID ${data.teamId}`);
+      
+      // Actualizar partidos donde el equipo es team1
+      const { error: team1Error } = await supabase
+        .from("matches")
+        .update({ team1_id: null })
+        .eq("team1_id", data.teamId);
+      
+      if (team1Error) {
+        console.error("Error al actualizar partidos (team1):", team1Error);
+      }
+      
+      // Actualizar partidos donde el equipo es team2
+      const { error: team2Error } = await supabase
+        .from("matches")
+        .update({ team2_id: null })
+        .eq("team2_id", data.teamId);
+      
+      if (team2Error) {
+        console.error("Error al actualizar partidos (team2):", team2Error);
+      }
+    }
+    
     // Si el equipo va a ser expulsado, lo eliminamos directamente
     if (data.status === "expelled") {
+      console.log(`Intentando expulsar y eliminar el equipo ID ${data.teamId}`);
+      
       // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
       const { error: membersError } = await supabase
         .from("team_members")
         .delete()
-        .eq("team_id", data.teamId)
+        .eq("team_id", data.teamId);
 
       if (membersError) {
-        console.error("Error al eliminar miembros del equipo:", membersError)
+        console.error("Error al eliminar miembros del equipo:", membersError);
         return {
           success: false,
           message: "Error al expulsar los miembros del equipo: " + membersError.message,
-        }
+        };
       }
+      
+      console.log(`Miembros del equipo ID ${data.teamId} eliminados correctamente`);
 
       // 2. Ahora eliminamos el equipo
       const { error: teamError } = await supabase
         .from("teams")
         .delete()
-        .eq("id", data.teamId)
+        .eq("id", data.teamId);
 
       if (teamError) {
-        console.error("Error al eliminar equipo:", teamError)
+        console.error("Error al eliminar equipo:", teamError);
         return {
           success: false,
           message: "Error al expulsar el equipo: " + teamError.message,
-        }
+        };
       }
-
+      
+      console.log(`Equipo ID ${data.teamId} eliminado correctamente`);
+      
       // 3. Revalidar las rutas necesarias
       revalidatePath(`/torneos/${data.tournamentId}`)
       revalidatePath(`/torneos/${data.tournamentId}/equipos`)
@@ -1035,6 +1080,8 @@ export async function changeTeamStatus(data: {
     revalidatePath(`/torneos/${data.tournamentId}`)
     revalidatePath(`/torneos/${data.tournamentId}/equipos`)
     revalidatePath(`/admin/torneos/${data.tournamentId}`)
+    revalidatePath(`/admin`)
+    revalidatePath('/')
 
     return {
       success: true,

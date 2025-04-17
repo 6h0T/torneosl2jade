@@ -16,18 +16,16 @@ import TeamStatusChanger from "@/components/admin/team-status-changer"
 export const revalidate = 0 // This disables caching for this page
 
 // Acciones del servidor - definidas fuera del componente
-async function generateBracketAction(formData: FormData) {
+async function generateBracketAction(formData: FormData): Promise<void> {
   "use server"
   const tournamentId = Number(formData.get("tournamentId"))
   await generateInitialBracket(tournamentId)
-  return { success: true }
 }
 
-async function deleteMatchesAction(formData: FormData) {
+async function deleteMatchesAction(formData: FormData): Promise<void> {
   "use server"
   const tournamentId = Number(formData.get("tournamentId"))
   await deleteAllMatches(tournamentId)
-  return { success: true }
 }
 
 export default async function AdminTournamentPage({ params }: { params: { id: string } }) {

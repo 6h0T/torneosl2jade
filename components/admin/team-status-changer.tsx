@@ -58,8 +58,8 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
 
       if (result.success) {
         setTimeout(() => {
-          window.location.reload()
-        }, 1500)
+          window.location.href = window.location.href;
+        }, 2000)
       }
     } catch (error) {
       console.error("Error al cambiar el estado del equipo:", error)

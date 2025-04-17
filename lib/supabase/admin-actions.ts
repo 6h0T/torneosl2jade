@@ -937,7 +937,9 @@ export async function updateTeam(data: {
   }
 }
 
-// Reemplaza la función changeTeamStatus completa con esta:
+// Add this function to the existing admin-actions.ts file
+
+// Función para cambiar el estado de un equipo
 export async function changeTeamStatus(data: {
   teamId: number
   status: "approved" | "rejected" | "expelled"
@@ -946,98 +948,7 @@ export async function changeTeamStatus(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
-    
-    if (!supabase) {
-      throw new Error("No se pudo crear el cliente de Supabase")
-    }
 
-    // Verificar si el equipo está siendo referenciado en partidos
-    const { data: matchesData, error: matchesError } = await supabase
-      .from("matches")
-      .select("id")
-      .or(`team1_id.eq.${data.teamId},team2_id.eq.${data.teamId}`);
-    
-    if (matchesError) {
-      console.error("Error al verificar partidos relacionados:", matchesError);
-      return {
-        success: false,
-        message: "Error al verificar si el equipo está en partidos: " + matchesError.message,
-      };
-    }
-    
-    // Si hay partidos que referencian al equipo, actualizar esas referencias a null
-    if (matchesData && matchesData.length > 0) {
-      console.log(`Actualizando ${matchesData.length} partidos relacionados con el equipo ID ${data.teamId}`);
-      
-      // Actualizar partidos donde el equipo es team1
-      const { error: team1Error } = await supabase
-        .from("matches")
-        .update({ team1_id: null })
-        .eq("team1_id", data.teamId);
-      
-      if (team1Error) {
-        console.error("Error al actualizar partidos (team1):", team1Error);
-      }
-      
-      // Actualizar partidos donde el equipo es team2
-      const { error: team2Error } = await supabase
-        .from("matches")
-        .update({ team2_id: null })
-        .eq("team2_id", data.teamId);
-      
-      if (team2Error) {
-        console.error("Error al actualizar partidos (team2):", team2Error);
-      }
-    }
-    
-    // Si el equipo va a ser expulsado, lo eliminamos directamente
-    if (data.status === "expelled") {
-      console.log(`Intentando expulsar y eliminar el equipo ID ${data.teamId}`);
-      
-      // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
-      const { error: membersError } = await supabase
-        .from("team_members")
-        .delete()
-        .eq("team_id", data.teamId);
-
-      if (membersError) {
-        console.error("Error al eliminar miembros del equipo:", membersError);
-        return {
-          success: false,
-          message: "Error al expulsar los miembros del equipo: " + membersError.message,
-        };
-      }
-      
-      console.log(`Miembros del equipo ID ${data.teamId} eliminados correctamente`);
-
-      // 2. Ahora eliminamos el equipo
-      const { error: teamError } = await supabase
-        .from("teams")
-        .delete()
-        .eq("id", data.teamId);
-
-      if (teamError) {
-        console.error("Error al eliminar equipo:", teamError);
-        return {
-          success: false,
-          message: "Error al expulsar el equipo: " + teamError.message,
-        };
-      }
-      
-      console.log(`Equipo ID ${data.teamId} eliminado correctamente`);
-      
-      // 3. Revalidar las rutas necesarias
-      revalidatePath(`/torneos/${data.tournamentId}`)
-      revalidatePath(`/torneos/${data.tournamentId}/equipos`)
-      revalidatePath(`/admin/torneos/${data.tournamentId}`)
-
-      return {
-        success: true,
-        message: "Equipo expulsado y eliminado correctamente.",
-      }
-    }
-
-    // Para otros estados, actualizamos normalmente
     // Preparar los datos para actualizar
     const updateData: any = {
       status: data.status,
@@ -1058,6 +969,13 @@ export async function changeTeamStatus(data: {
       updateData.approved_at = null
       updateData.expelled_at = null
       updateData.expulsion_reason = null
+    } else if (data.status === "expelled") {
+      updateData.expelled_at = new Date().toISOString()
+      updateData.expulsion_reason = data.reason || "No se proporcionó motivo"
+      // Limpiar campos de aprobación y rechazo si existían
+      updateData.approved_at = null
+      updateData.rejected_at = null
+      updateData.rejection_reason = null
     }
 
     // Actualizar el equipo
@@ -1080,13 +998,11 @@ export async function changeTeamStatus(data: {
     revalidatePath(`/torneos/${data.tournamentId}`)
     revalidatePath(`/torneos/${data.tournamentId}/equipos`)
     revalidatePath(`/admin/torneos/${data.tournamentId}`)
-    revalidatePath(`/admin`)
-    revalidatePath('/')
 
     return {
       success: true,
       message: `Equipo ${
-        data.status === "approved" ? "aprobado" : "rechazado"
+        data.status === "approved" ? "aprobado" : data.status === "rejected" ? "rechazado" : "expulsado"
       } correctamente.`,
     }
   } catch (error) {
@@ -1094,61 +1010,6 @@ export async function changeTeamStatus(data: {
     return {
       success: false,
       message: "Error inesperado al cambiar el estado del equipo.",
-    }
-  }
-}
-
-// Función para eliminar un equipo
-export async function deleteTeam(teamId: number, tournamentId: number) {
-  try {
-    const supabase = createServerComponentClient()
-    
-    if (!supabase) {
-      throw new Error("No se pudo crear el cliente de Supabase")
-    }
-
-    // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
-    const { error: membersError } = await supabase
-      .from("team_members")
-      .delete()
-      .eq("team_id", teamId)
-
-    if (membersError) {
-      console.error("Error al eliminar miembros del equipo:", membersError)
-      return {
-        success: false,
-        message: "Error al eliminar los miembros del equipo: " + membersError.message,
-      }
-    }
-
-    // 2. Ahora eliminamos el equipo
-    const { error: teamError } = await supabase
-      .from("teams")
-      .delete()
-      .eq("id", teamId)
-
-    if (teamError) {
-      console.error("Error al eliminar equipo:", teamError)
-      return {
-        success: false,
-        message: "Error al eliminar el equipo: " + teamError.message,
-      }
-    }
-
-    // 3. Revalidar las rutas necesarias
-    revalidatePath(`/torneos/${tournamentId}`)
-    revalidatePath(`/torneos/${tournamentId}/equipos`)
-    revalidatePath(`/admin/torneos/${tournamentId}`)
-
-    return {
-      success: true,
-      message: "Equipo eliminado correctamente.",
-    }
-  } catch (error) {
-    console.error("Error:", error)
-    return {
-      success: false,
-      message: "Error inesperado al eliminar el equipo.",
     }
   }
 }

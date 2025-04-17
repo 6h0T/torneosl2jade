@@ -190,13 +190,11 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
       </div>
 
       {/* Diálogo de registro exitoso */}
-      {registrationResult && (
-        <RegistrationSuccessDialog
-          open={showSuccessDialog}
-          onOpenChange={setShowSuccessDialog}
-          tournamentId={registrationResult.tournamentId}
-        />
-      )}
+      <RegistrationSuccessDialog
+        open={showSuccessDialog && registrationResult !== null}
+        onOpenChange={setShowSuccessDialog}
+        tournamentId={registrationResult?.tournamentId || activeTournament.id}
+      />
     </div>
   )
 }

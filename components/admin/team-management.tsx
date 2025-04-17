@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { CheckCircle2, XCircle, AlertCircle, Phone } from "lucide-react"
-import { approveTeam, rejectTeam } from "@/lib/supabase/admin-actions"
+import { CheckCircle2, XCircle, AlertCircle, Phone, Trash2 } from "lucide-react"
+import { approveTeam, rejectTeam, deleteTeam } from "@/lib/supabase/admin-actions"
 import type { Team } from "@/lib/types"
 
 interface TeamManagementProps {
@@ -19,6 +19,7 @@ interface TeamManagementProps {
 export default function TeamManagement({ teams, tournamentId }: TeamManagementProps) {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [rejectionReason, setRejectionReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -28,6 +29,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
   const pendingTeams = teams.filter((team) => team.status === "pending")
   const approvedTeams = teams.filter((team) => team.status === "approved")
   const rejectedTeams = teams.filter((team) => team.status === "rejected")
+  const expelledTeams = teams.filter((team) => team.status === "expelled")
 
   const handleApproveClick = (team: Team) => {
     setSelectedTeam(team)
@@ -38,6 +40,11 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
     setSelectedTeam(team)
     setRejectionReason("")
     setIsRejectDialogOpen(true)
+  }
+
+  const handleDeleteClick = (team: Team) => {
+    setSelectedTeam(team)
+    setIsDeleteDialogOpen(true)
   }
 
   const handleApproveConfirm = async () => {
@@ -79,6 +86,28 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
     if (result.success) {
       setTimeout(() => {
         setIsRejectDialogOpen(false)
+        setMessage(null)
+      }, 2000)
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedTeam) return
+
+    setIsSubmitting(true)
+    setMessage(null)
+
+    const result = await deleteTeam(selectedTeam.id, tournamentId)
+
+    setIsSubmitting(false)
+    setMessage({
+      type: result.success ? "success" : "error",
+      text: result.message,
+    })
+
+    if (result.success) {
+      setTimeout(() => {
+        setIsDeleteDialogOpen(false)
         setMessage(null)
       }, 2000)
     }
@@ -222,6 +251,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                   <TableHead className="text-jade-300">Fecha de rechazo</TableHead>
                   <TableHead className="text-jade-300">Motivo</TableHead>
                   <TableHead className="text-jade-300">Estado</TableHead>
+                  <TableHead className="text-jade-300">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -240,6 +270,69 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                     <TableCell className="max-w-xs truncate">{team.rejection_reason || "No especificado"}</TableCell>
                     <TableCell>
                       <Badge className="bg-red-800">Rechazado</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-700 text-gray-400 hover:bg-red-900/30 hover:text-red-300 hover:border-red-700"
+                        onClick={() => handleDeleteClick(team)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+
+      {/* Equipos expulsados */}
+      {expelledTeams.length > 0 && (
+        <div>
+          <h3 className="text-lg font-medium text-jade-400 mb-3">Equipos Expulsados ({expelledTeams.length})</h3>
+          <div className="overflow-x-auto">
+            <Table className="border border-jade-800/30">
+              <TableHeader className="bg-black/50">
+                <TableRow>
+                  <TableHead className="text-jade-300">ID</TableHead>
+                  <TableHead className="text-jade-300">Nombre</TableHead>
+                  <TableHead className="text-jade-300">Teléfono</TableHead>
+                  <TableHead className="text-jade-300">Fecha de registro</TableHead>
+                  <TableHead className="text-jade-300">Fecha de expulsión</TableHead>
+                  <TableHead className="text-jade-300">Motivo</TableHead>
+                  <TableHead className="text-jade-300">Estado</TableHead>
+                  <TableHead className="text-jade-300">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expelledTeams.map((team) => (
+                  <TableRow key={team.id} className="border-b border-jade-800/20">
+                    <TableCell>{team.id}</TableCell>
+                    <TableCell className="font-medium">{team.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Phone className="h-3 w-3 text-jade-400 mr-1" />
+                        {team.phone || "No disponible"}
+                      </div>
+                    </TableCell>
+                    <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{team.expelled_at ? new Date(team.expelled_at).toLocaleDateString() : "N/A"}</TableCell>
+                    <TableCell className="max-w-xs truncate">{team.expulsion_reason || "No especificado"}</TableCell>
+                    <TableCell>
+                      <Badge className="bg-red-800">Expulsado</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-700 text-gray-400 hover:bg-red-900/30 hover:text-red-300 hover:border-red-700"
+                        onClick={() => handleDeleteClick(team)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -321,6 +414,40 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
               disabled={isSubmitting}
             >
               {isSubmitting ? "Procesando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmación para eliminar equipo */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="bg-black/90 border-jade-800/30">
+          <DialogHeader>
+            <DialogTitle className="text-red-400">Eliminar Equipo</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-300">
+              ¿Estás seguro de que deseas eliminar permanentemente el equipo <span className="font-bold">{selectedTeam?.name}</span>?
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              Esta acción no se puede deshacer. El equipo y todos sus miembros serán eliminados de la base de datos.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="border-gray-700 text-gray-300"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-800 hover:bg-red-700 text-white"
+              onClick={handleDeleteConfirm}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Eliminando..." : "Eliminar Permanentemente"}
             </Button>
           </DialogFooter>
         </DialogContent>

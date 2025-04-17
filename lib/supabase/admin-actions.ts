@@ -1013,3 +1013,58 @@ export async function changeTeamStatus(data: {
     }
   }
 }
+
+// Función para eliminar un equipo
+export async function deleteTeam(teamId: number, tournamentId: number) {
+  try {
+    const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      throw new Error("No se pudo crear el cliente de Supabase")
+    }
+
+    // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
+    const { error: membersError } = await supabase
+      .from("team_members")
+      .delete()
+      .eq("team_id", teamId)
+
+    if (membersError) {
+      console.error("Error al eliminar miembros del equipo:", membersError)
+      return {
+        success: false,
+        message: "Error al eliminar los miembros del equipo: " + membersError.message,
+      }
+    }
+
+    // 2. Ahora eliminamos el equipo
+    const { error: teamError } = await supabase
+      .from("teams")
+      .delete()
+      .eq("id", teamId)
+
+    if (teamError) {
+      console.error("Error al eliminar equipo:", teamError)
+      return {
+        success: false,
+        message: "Error al eliminar el equipo: " + teamError.message,
+      }
+    }
+
+    // 3. Revalidar las rutas necesarias
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/torneos/${tournamentId}/equipos`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
+
+    return {
+      success: true,
+      message: "Equipo eliminado correctamente.",
+    }
+  } catch (error) {
+    console.error("Error:", error)
+    return {
+      success: false,
+      message: "Error inesperado al eliminar el equipo.",
+    }
+  }
+}

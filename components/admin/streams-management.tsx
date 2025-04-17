@@ -428,7 +428,7 @@ export default function StreamsManagement() {
               </Label>
               <Input
                 id="title"
-                placeholder="Ej: Torneo Comunidad Jade - Semifinales"
+                placeholder="Ej: Torneo Lineage 2 - Semifinales"
                 value={newStream.title}
                 onChange={(e) => setNewStream({ ...newStream, title: e.target.value })}
                 className="bg-black/50 border-gray-700 focus:border-jade-600 focus:ring-jade-500/30"

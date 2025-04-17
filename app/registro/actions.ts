@@ -6,6 +6,11 @@ import { revalidatePath } from "next/cache"
 // Function to get the active tournament
 async function getActiveTournament() {
   const supabase = createServerComponentClient()
+  if (!supabase) {
+    console.error("Failed to create Supabase client")
+    return null
+  }
+  
   const { data: tournaments, error } = await supabase
     .from("tournaments")
     .select("*")
@@ -24,36 +29,20 @@ async function getActiveTournament() {
 // Update the registerTeam function to ensure it's properly saving to the database
 export async function registerTeam(formData: FormData) {
   try {
-    console.log("Starting team registration process")
-
     const teamName = formData.get("teamName") as string
 
     // Obtain team members data
     const member1Name = formData.get("member1Name") as string
-    const member1Class = (formData.get("member1Class") as string) || "No especificada"
+    const member1Class = formData.get("member1Class") ? formData.get("member1Class") as string : "No especificada"
 
     const member2Name = formData.get("member2Name") as string
-    const member2Class = (formData.get("member2Class") as string) || "No especificada"
+    const member2Class = formData.get("member2Class") ? formData.get("member2Class") as string : "No especificada"
 
     const member3Name = formData.get("member3Name") as string
-    const member3Class = (formData.get("member3Class") as string) || "No especificada"
-
-    // Get phone data
-    const countryCode = formData.get("countryCode") as string
-    const phoneNumber = formData.get("phoneNumber") as string
-
-    console.log("Form data extracted:", {
-      teamName,
-      member1Name,
-      member2Name,
-      member3Name,
-      countryCode,
-      phoneNumber,
-    })
+    const member3Class = formData.get("member3Class") ? formData.get("member3Class") as string : "No especificada"
 
     // Validate data
     if (!teamName || !member1Name || !member2Name || !member3Name) {
-      console.log("Validation failed: Missing required fields")
       return {
         success: false,
         message: "Por favor, completa todos los campos obligatorios.",
@@ -63,14 +52,11 @@ export async function registerTeam(formData: FormData) {
     // Get the active tournament
     const activeTournament = await getActiveTournament()
     if (!activeTournament) {
-      console.log("No active tournaments found")
       return {
         success: false,
         message: "No hay torneos activos disponibles para registro.",
       }
     }
-
-    console.log("Active tournament found:", activeTournament.id)
 
     // Create Supabase client
     const supabase = createServerComponentClient()
@@ -78,53 +64,61 @@ export async function registerTeam(formData: FormData) {
       console.error("Failed to create Supabase client")
       return {
         success: false,
-        message: "Error de conexión con la base de datos.",
+        message: "Error de conexión con la base de datos. Por favor, inténtalo de nuevo.",
       }
     }
 
     // Check if a team with this name already exists in the tournament
-    const { data: existingTeam, error: existingTeamError } = await supabase
+    const { data: existingTeam } = await supabase
       .from("teams")
       .select("id")
       .eq("name", teamName)
       .eq("tournament_id", activeTournament.id)
       .maybeSingle()
 
-    if (existingTeamError) {
-      console.error("Error checking existing team:", existingTeamError)
-    }
-
     if (existingTeam) {
-      console.log("Team with this name already exists")
       return {
         success: false,
         message: "Ya existe un equipo con ese nombre en este torneo.",
       }
     }
 
-    // Format phone number (only if both countryCode and phoneNumber are provided)
-    const teamPhone = countryCode && phoneNumber ? `${countryCode} ${phoneNumber}` : null
-    console.log("Formatted phone number:", teamPhone)
+    // Process phone information safely
+    let teamPhone = ""
+    const rawCountryCode = formData.get("countryCode")
+    const rawPhoneNumber = formData.get("phoneNumber")
+    
+    if (rawCountryCode && rawPhoneNumber) {
+      const countryCode = rawCountryCode.toString()
+      const phoneNumber = rawPhoneNumber.toString()
+      if (phoneNumber.trim()) {
+        teamPhone = `${countryCode} ${phoneNumber}`.trim()
+      }
+    }
 
-    // Insert team with phone number
+    // Create team with phone if provided
+    const teamToInsert: any = {
+      name: teamName,
+      tournament_id: activeTournament.id,
+      status: "pending",
+      created_at: new Date().toISOString(),
+    }
+    
+    // Only add phone if it has a value
+    if (teamPhone) {
+      teamToInsert.phone = teamPhone
+    }
+
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
-      .insert([
-        {
-          name: teamName,
-          phone: teamPhone, // Now including the phone field
-          tournament_id: activeTournament.id,
-          status: "pending",
-          created_at: new Date().toISOString(),
-        },
-      ])
+      .insert([teamToInsert])
       .select()
 
     if (teamError) {
       console.error("Error inserting team:", teamError)
       return {
         success: false,
-        message: "Error al registrar el equipo: " + teamError.message,
+        message: "Error al registrar el equipo. Por favor, inténtalo de nuevo.",
       }
     }
 
@@ -137,7 +131,6 @@ export async function registerTeam(formData: FormData) {
     }
 
     const teamId = teamData[0].id
-    console.log("Team inserted with ID:", teamId)
 
     // Prepare team members
     const teamMembers = [
@@ -156,12 +149,11 @@ export async function registerTeam(formData: FormData) {
 
       return {
         success: false,
-        message: "Error al registrar los miembros del equipo: " + membersError.message,
+        message: "Error al registrar los miembros del equipo. Por favor, inténtalo de nuevo.",
       }
     }
 
     // Revalidate paths to show the updated team
-    console.log("Registration successful, revalidating paths")
     revalidatePath(`/torneos/${activeTournament.id}`)
     revalidatePath(`/admin/torneos/${activeTournament.id}`)
     revalidatePath("/")

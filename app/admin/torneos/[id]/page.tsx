@@ -12,6 +12,9 @@ import MatchSchedulingForm from "@/components/admin/match-scheduling-form"
 import TeamEditButton from "@/components/admin/team-edit-button"
 import TeamStatusChanger from "@/components/admin/team-status-changer"
 
+// Add this function at the top level of the file, outside of the component
+export const revalidate = 0 // This disables caching for this page
+
 // Acciones del servidor - definidas fuera del componente
 async function generateBracketAction(formData: FormData) {
   "use server"

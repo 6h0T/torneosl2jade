@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { CheckCircle2, XCircle, AlertCircle, Phone } from "lucide-react"
 import { approveTeam, rejectTeam } from "@/lib/supabase/admin-actions"
 import type { Team } from "@/lib/types"
 
@@ -127,7 +127,12 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                   <TableRow key={team.id} className="border-b border-jade-800/20">
                     <TableCell>{team.id}</TableCell>
                     <TableCell className="font-medium">{team.name}</TableCell>
-                    <TableCell>{team.phone || "No disponible"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Phone className="h-3 w-3 text-jade-400 mr-1" />
+                        {team.phone || "No disponible"}
+                      </div>
+                    </TableCell>
                     <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Badge className="bg-yellow-600">Pendiente</Badge>
@@ -183,7 +188,12 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                   <TableRow key={team.id} className="border-b border-jade-800/20">
                     <TableCell>{team.id}</TableCell>
                     <TableCell className="font-medium">{team.name}</TableCell>
-                    <TableCell>{team.phone || "No disponible"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Phone className="h-3 w-3 text-jade-400 mr-1" />
+                        {team.phone || "No disponible"}
+                      </div>
+                    </TableCell>
                     <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>{team.approved_at ? new Date(team.approved_at).toLocaleDateString() : "N/A"}</TableCell>
                     <TableCell>
@@ -219,7 +229,12 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                   <TableRow key={team.id} className="border-b border-jade-800/20">
                     <TableCell>{team.id}</TableCell>
                     <TableCell className="font-medium">{team.name}</TableCell>
-                    <TableCell>{team.phone || "No disponible"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Phone className="h-3 w-3 text-jade-400 mr-1" />
+                        {team.phone || "No disponible"}
+                      </div>
+                    </TableCell>
                     <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>{team.rejected_at ? new Date(team.rejected_at).toLocaleDateString() : "N/A"}</TableCell>
                     <TableCell className="max-w-xs truncate">{team.rejection_reason || "No especificado"}</TableCell>

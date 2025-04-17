@@ -106,14 +106,14 @@ export async function getTournamentPrizes(tournamentId: number): Promise<Tournam
 export async function getTeamsByTournament(tournamentId: number, status?: string): Promise<Team[]> {
   try {
     const supabase = createServerComponentClient()
-    let query = supabase.from("teams").select("*").eq("tournament_id", tournamentId)
+    let query = supabase.from("teams").select("*, members:team_members(*)").eq("tournament_id", tournamentId)
 
-    // Si se proporciona un estado específico, filtrar por ese estado
+    // If a specific status is provided, filter by that status
     if (status) {
       query = query.eq("status", status)
     }
 
-    const { data, error } = await query.order("created_at", { ascending: true })
+    const { data, error } = await query.order("created_at", { ascending: false })
 
     if (error) {
       console.error(`Error fetching teams for tournament ${tournamentId}:`, error)

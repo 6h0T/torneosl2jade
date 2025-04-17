@@ -45,7 +45,6 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
   const pendingTeams = teams.filter((team) => team.status === "pending")
   const approvedTeams = teams.filter((team) => team.status === "approved")
   const rejectedTeams = teams.filter((team) => team.status === "rejected")
-  const expelledTeams = teams.filter((team) => team.status === "expelled")
 
   // Obtener partidos
   const matches = await getMatchesByTournament(tournamentId)
@@ -151,27 +150,6 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
                   <div className="space-y-4">
                     {rejectedTeams.map((team) => (
                       <TeamCard key={team.id} team={team} tournamentId={tournamentId} status="rejected" />
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Equipos expulsados */}
-            <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
-              <CardHeader>
-                <CardTitle className="text-lg text-jade-400 flex items-center">
-                  Equipos Expulsados
-                  <Badge className="ml-2 bg-amber-600">{expelledTeams.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                {expelledTeams.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No hay equipos expulsados.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {expelledTeams.map((team) => (
-                      <TeamCard key={team.id} team={team} tournamentId={tournamentId} status="expelled" />
                     ))}
                   </div>
                 )}
@@ -366,7 +344,7 @@ async function TeamCard({
   team,
   tournamentId,
   status,
-}: { team: any; tournamentId: number; status: "pending" | "approved" | "rejected" | "expelled" }) {
+}: { team: any; tournamentId: number; status: "pending" | "approved" | "rejected" }) {
   // Obtener miembros del equipo
   const members = await getTeamMembers(team.id)
 
@@ -394,12 +372,6 @@ async function TeamCard({
           <>
             <span>Rechazado: {new Date(team.rejected_at).toLocaleDateString()}</span>
             <p className="mt-1">Motivo: {team.rejection_reason || "No especificado"}</p>
-          </>
-        )}
-        {status === "expelled" && (
-          <>
-            <span>Expulsado: {new Date(team.expelled_at).toLocaleDateString()}</span>
-            <p className="mt-1">Motivo: {team.expulsion_reason || "No especificado"}</p>
           </>
         )}
         {status === "pending" && <span>Pendiente de aprobación</span>}

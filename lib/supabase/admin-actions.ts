@@ -937,9 +937,7 @@ export async function updateTeam(data: {
   }
 }
 
-// Add this function to the existing admin-actions.ts file
-
-// Función para cambiar el estado de un equipo
+// Reemplaza la función changeTeamStatus completa con esta:
 export async function changeTeamStatus(data: {
   teamId: number
   status: "approved" | "rejected" | "expelled"
@@ -948,7 +946,53 @@ export async function changeTeamStatus(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      throw new Error("No se pudo crear el cliente de Supabase")
+    }
 
+    // Si el equipo va a ser expulsado, lo eliminamos directamente
+    if (data.status === "expelled") {
+      // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
+      const { error: membersError } = await supabase
+        .from("team_members")
+        .delete()
+        .eq("team_id", data.teamId)
+
+      if (membersError) {
+        console.error("Error al eliminar miembros del equipo:", membersError)
+        return {
+          success: false,
+          message: "Error al expulsar los miembros del equipo: " + membersError.message,
+        }
+      }
+
+      // 2. Ahora eliminamos el equipo
+      const { error: teamError } = await supabase
+        .from("teams")
+        .delete()
+        .eq("id", data.teamId)
+
+      if (teamError) {
+        console.error("Error al eliminar equipo:", teamError)
+        return {
+          success: false,
+          message: "Error al expulsar el equipo: " + teamError.message,
+        }
+      }
+
+      // 3. Revalidar las rutas necesarias
+      revalidatePath(`/torneos/${data.tournamentId}`)
+      revalidatePath(`/torneos/${data.tournamentId}/equipos`)
+      revalidatePath(`/admin/torneos/${data.tournamentId}`)
+
+      return {
+        success: true,
+        message: "Equipo expulsado y eliminado correctamente.",
+      }
+    }
+
+    // Para otros estados, actualizamos normalmente
     // Preparar los datos para actualizar
     const updateData: any = {
       status: data.status,
@@ -969,13 +1013,6 @@ export async function changeTeamStatus(data: {
       updateData.approved_at = null
       updateData.expelled_at = null
       updateData.expulsion_reason = null
-    } else if (data.status === "expelled") {
-      updateData.expelled_at = new Date().toISOString()
-      updateData.expulsion_reason = data.reason || "No se proporcionó motivo"
-      // Limpiar campos de aprobación y rechazo si existían
-      updateData.approved_at = null
-      updateData.rejected_at = null
-      updateData.rejection_reason = null
     }
 
     // Actualizar el equipo
@@ -1002,7 +1039,7 @@ export async function changeTeamStatus(data: {
     return {
       success: true,
       message: `Equipo ${
-        data.status === "approved" ? "aprobado" : data.status === "rejected" ? "rechazado" : "expulsado"
+        data.status === "approved" ? "aprobado" : "rechazado"
       } correctamente.`,
     }
   } catch (error) {

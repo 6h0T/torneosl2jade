@@ -880,6 +880,10 @@ export async function updateTeam(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      throw new Error("No se pudo crear el cliente de Supabase")
+    }
 
     // 1. Actualizar el nombre del equipo
     const { error: teamError } = await supabase

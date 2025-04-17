@@ -57,11 +57,10 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
     setMessage(null)
 
     try {
-      // Modificamos para incluir el teléfono
       const result = await updateTeam({
         teamId: team.id,
         teamName,
-        teamPhone, // Añadimos el teléfono
+        teamPhone,
         members: teamMembers.map(member => ({
           id: member.id,
           name: member.name,

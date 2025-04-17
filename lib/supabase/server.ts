@@ -1,27 +1,27 @@
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 
-// Create a Supabase client for the server side
+// Crear un cliente de Supabase para el lado del servidor
 export const createServerComponentClient = () => {
-  try {
-    const cookieStore = cookies()
+  const cookieStore = cookies()
 
-    // Check if environment variables are defined
-    const supabaseUrl = process.env.SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  // Verificar que las variables de entorno estén definidas
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL no está definida')
+  }
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing Supabase environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
-      return null
-    }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no está definida')
+  }
 
-    return createClient(supabaseUrl, supabaseKey, {
+  // Crear y devolver el cliente de Supabase
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
       auth: {
         persistSession: false,
       },
-    })
-  } catch (error) {
-    console.error("Error creating Supabase client:", error)
-    return null
-  }
+    }
+  )
 }

@@ -25,11 +25,10 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-  // Filtrar equipos por estado
+  // Filtrar equipos por estado - no incluimos equipos expulsados ya que se eliminan automáticamente
   const pendingTeams = teams.filter((team) => team.status === "pending")
   const approvedTeams = teams.filter((team) => team.status === "approved")
   const rejectedTeams = teams.filter((team) => team.status === "rejected")
-  const expelledTeams = teams.filter((team) => team.status === "expelled")
 
   const handleApproveClick = (team: Team) => {
     setSelectedTeam(team)
@@ -270,59 +269,6 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                     <TableCell className="max-w-xs truncate">{team.rejection_reason || "No especificado"}</TableCell>
                     <TableCell>
                       <Badge className="bg-red-800">Rechazado</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-gray-700 text-gray-400 hover:bg-red-900/30 hover:text-red-300 hover:border-red-700"
-                        onClick={() => handleDeleteClick(team)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
-
-      {/* Equipos expulsados */}
-      {expelledTeams.length > 0 && (
-        <div>
-          <h3 className="text-lg font-medium text-jade-400 mb-3">Equipos Expulsados ({expelledTeams.length})</h3>
-          <div className="overflow-x-auto">
-            <Table className="border border-jade-800/30">
-              <TableHeader className="bg-black/50">
-                <TableRow>
-                  <TableHead className="text-jade-300">ID</TableHead>
-                  <TableHead className="text-jade-300">Nombre</TableHead>
-                  <TableHead className="text-jade-300">Teléfono</TableHead>
-                  <TableHead className="text-jade-300">Fecha de registro</TableHead>
-                  <TableHead className="text-jade-300">Fecha de expulsión</TableHead>
-                  <TableHead className="text-jade-300">Motivo</TableHead>
-                  <TableHead className="text-jade-300">Estado</TableHead>
-                  <TableHead className="text-jade-300">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expelledTeams.map((team) => (
-                  <TableRow key={team.id} className="border-b border-jade-800/20">
-                    <TableCell>{team.id}</TableCell>
-                    <TableCell className="font-medium">{team.name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Phone className="h-3 w-3 text-jade-400 mr-1" />
-                        {team.phone || "No disponible"}
-                      </div>
-                    </TableCell>
-                    <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>{team.expelled_at ? new Date(team.expelled_at).toLocaleDateString() : "N/A"}</TableCell>
-                    <TableCell className="max-w-xs truncate">{team.expulsion_reason || "No especificado"}</TableCell>
-                    <TableCell>
-                      <Badge className="bg-red-800">Expulsado</Badge>
                     </TableCell>
                     <TableCell>
                       <Button

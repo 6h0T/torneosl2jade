@@ -47,6 +47,11 @@ export default function RegistrationSuccessDialog({
     router.push(`/torneos/${tournamentId}?success=true`)
   }
 
+  // Al inicio del componente RegistrationSuccessDialog
+  useEffect(() => {
+    console.log("Dialog: Props recibidos:", { open, tournamentId })
+  }, [open, tournamentId])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-black/90 border-forest-800/30 max-w-md">

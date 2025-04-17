@@ -41,14 +41,22 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
         formData.set("countryCode", selectedCountry.prefix)
       }
 
+      console.log("Cliente: Enviando formulario...")
       // Obtener el resultado del registro
       const result = await handleRegister(formData)
+      console.log("Cliente: Resultado recibido:", result)
 
       if (result && result.success) {
-        // Guardar el resultado y mostrar el diálogo de éxito
+        console.log("Cliente: Registro exitoso, mostrando diálogo")
+        // Primero actualizamos el resultado y luego mostramos el diálogo
         setRegistrationResult(result)
-        setShowSuccessDialog(true)
+        // Usar un setTimeout para asegurar que el estado se actualice antes de mostrar el diálogo
+        setTimeout(() => {
+          setShowSuccessDialog(true)
+          console.log("Cliente: Dialog should be visible now")
+        }, 100)
       } else if (result && !result.success) {
+        console.log("Cliente: Error en el registro:", result.message)
         // Mostrar mensaje de error del servidor
         setErrorMessage(result.message || "Error al registrar el equipo. Por favor, inténtalo de nuevo.")
       }
@@ -189,9 +197,9 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
         </Card>
       </div>
 
-      {/* Diálogo de registro exitoso */}
+      {/* Diálogo de registro exitoso - siempre renderizado */}
       <RegistrationSuccessDialog
-        open={showSuccessDialog && registrationResult !== null}
+        open={showSuccessDialog}
         onOpenChange={setShowSuccessDialog}
         tournamentId={registrationResult?.tournamentId || activeTournament.id}
       />

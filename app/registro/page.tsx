@@ -18,8 +18,10 @@ export default async function RegistroPage({ searchParams }: { searchParams: { e
 
   async function handleRegister(formData: FormData) {
     "use server"
+    console.log("Servidor: Procesando registro...")
     const result = await registerTeam(formData)
-
+    console.log("Servidor: Resultado del registro:", result)
+    
     // En lugar de redirigir, devolvemos el resultado para que el cliente decida qué hacer
     return result
   }

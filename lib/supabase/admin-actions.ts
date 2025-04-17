@@ -866,12 +866,11 @@ export async function checkAndUpdateTournamentStatus(tournamentId: number) {
   }
 }
 
-// Add this function to the existing admin-actions.ts file
-
 // Función para actualizar un equipo
 export async function updateTeam(data: {
   teamId: number
   teamName: string
+  teamPhone?: string
   members: Array<{
     id: number
     name: string
@@ -887,6 +886,7 @@ export async function updateTeam(data: {
       .from("teams")
       .update({
         name: data.teamName,
+        phone: data.teamPhone || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.teamId)
@@ -905,7 +905,7 @@ export async function updateTeam(data: {
         .from("team_members")
         .update({
           name: member.name,
-          character_class: member.character_class,
+          character_class: "No especificada", // Siempre fijamos este valor
         })
         .eq("id", member.id)
 

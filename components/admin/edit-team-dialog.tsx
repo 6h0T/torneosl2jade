@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { AlertCircle, CheckCircle2, Users } from "lucide-react"
+import { AlertCircle, CheckCircle2, Users, Phone } from "lucide-react"
 import { updateTeam } from "@/lib/supabase/admin-actions"
 import type { Team, TeamMember } from "@/lib/types"
 
@@ -19,6 +19,7 @@ interface EditTeamDialogProps {
 
 export default function EditTeamDialog({ isOpen, onClose, team, members, tournamentId }: EditTeamDialogProps) {
   const [teamName, setTeamName] = useState(team.name)
+  const [teamPhone, setTeamPhone] = useState(team.phone || "")
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(members)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -28,15 +29,6 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
     updatedMembers[index] = {
       ...updatedMembers[index],
       name: value,
-    }
-    setTeamMembers(updatedMembers)
-  }
-
-  const handleMemberClassChange = (index: number, value: string) => {
-    const updatedMembers = [...teamMembers]
-    updatedMembers[index] = {
-      ...updatedMembers[index],
-      character_class: value,
     }
     setTeamMembers(updatedMembers)
   }
@@ -65,10 +57,16 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
     setMessage(null)
 
     try {
+      // Modificamos para incluir el teléfono
       const result = await updateTeam({
         teamId: team.id,
         teamName,
-        members: teamMembers,
+        teamPhone, // Añadimos el teléfono
+        members: teamMembers.map(member => ({
+          id: member.id,
+          name: member.name,
+          character_class: "No especificada" // Valor fijo
+        })),
         tournamentId,
       })
 
@@ -133,6 +131,19 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="teamPhone" className="text-gray-300">
+              <Phone className="h-4 w-4 text-jade-400 inline mr-2" />
+              Teléfono de Contacto
+            </Label>
+            <Input
+              id="teamPhone"
+              value={teamPhone}
+              onChange={(e) => setTeamPhone(e.target.value)}
+              className="bg-black/50 border-gray-700 focus:border-jade-600 focus:ring-jade-500/30"
+            />
+          </div>
+
           <div className="space-y-3">
             <div className="flex items-center">
               <Users className="h-4 w-4 text-jade-400 mr-2" />
@@ -149,17 +160,6 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
                     id={`member-${index}-name`}
                     value={member.name}
                     onChange={(e) => handleMemberNameChange(index, e.target.value)}
-                    className="bg-black/50 border-gray-700 focus:border-jade-600 focus:ring-jade-500/30"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`member-${index}-class`} className="text-gray-300 text-xs">
-                    Clase
-                  </Label>
-                  <Input
-                    id={`member-${index}-class`}
-                    value={member.character_class}
-                    onChange={(e) => handleMemberClassChange(index, e.target.value)}
                     className="bg-black/50 border-gray-700 focus:border-jade-600 focus:ring-jade-500/30"
                   />
                 </div>

@@ -5,6 +5,7 @@ import { CalendarDays, Users, Trophy, Video, Plus, Edit } from "lucide-react"
 import Link from "next/link"
 import { getTournaments } from "@/lib/supabase/actions"
 import AuthCheck from "@/components/admin/auth-check"
+import DatabaseStatus from "@/components/admin/database-status"
 
 export default async function AdminPage() {
   // Obtener todos los torneos
@@ -13,6 +14,7 @@ export default async function AdminPage() {
   return (
     <AuthCheck>
       <div className="container mx-auto px-4 py-8">
+        <DatabaseStatus />
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-jade-400">Panel de Administración</h1>
           <Link href="/admin/torneos/crear">

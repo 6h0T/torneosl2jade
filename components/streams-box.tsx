@@ -285,7 +285,7 @@ export default function StreamsBox() {
             </div>
 
             <div className="p-2 border-t border-jade-800/30 text-center">
-              <p className="text-xs text-gray-500">Transmisiones oficiales de la Comunidad Jade</p>
+              <p className="text-xs text-gray-500">Transmisiones oficiales del torneo Lineage 2</p>
             </div>
           </motion.div>
         )}

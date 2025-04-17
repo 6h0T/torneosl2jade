@@ -6,20 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { CountrySelector, type Country } from "@/components/country-selector"
-import { useRouter } from "next/navigation"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import RegistrationSuccessDialog from "@/components/registration-success-dialog"
 
 interface RegistrationFormProps {
   activeTournament: any
@@ -28,27 +20,12 @@ interface RegistrationFormProps {
 
 export default function RegistrationForm({ activeTournament, handleRegister }: RegistrationFormProps) {
   const { t } = useLanguage()
-  const router = useRouter()
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined)
   const [phoneExample, setPhoneExample] = useState<string>("123456789")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [registrationResult, setRegistrationResult] = useState<any>(null)
-  const [redirectCountdown, setRedirectCountdown] = useState(5)
-
-  // Efecto para el contador de redirección
-  useEffect(() => {
-    if (showSuccessDialog && redirectCountdown > 0) {
-      const timer = setTimeout(() => {
-        setRedirectCountdown(redirectCountdown - 1)
-      }, 1000)
-      return () => clearTimeout(timer)
-    } else if (showSuccessDialog && redirectCountdown === 0 && registrationResult) {
-      // Redirigir cuando el contador llegue a cero
-      router.push(`/torneos/${registrationResult.tournamentId}?success=true`)
-    }
-  }, [showSuccessDialog, redirectCountdown, router, registrationResult])
 
   // Función para manejar el envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,13 +57,6 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
       setErrorMessage("Error al enviar el formulario. Por favor, inténtalo de nuevo.")
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  // Función para redirigir inmediatamente
-  const handleRedirectNow = () => {
-    if (registrationResult) {
-      router.push(`/torneos/${registrationResult.tournamentId}?success=true`)
     }
   }
 
@@ -220,35 +190,13 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
       </div>
 
       {/* Diálogo de registro exitoso */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="bg-black/90 border-forest-800/30 max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-forest-400 flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2 text-forest-400" />
-              ¡Registro Exitoso!
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Tu equipo ha sido registrado correctamente en el torneo.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <div className="bg-forest-900/20 border border-forest-800/50 rounded-md p-4 text-center">
-              <p className="text-forest-300 mb-2">¡Gracias por participar!</p>
-              <p className="text-gray-300">
-                Tu equipo está pendiente de aprobación por los administradores del torneo. Serás redirigido a la página
-                del torneo en <span className="text-forest-400 font-bold">{redirectCountdown}</span> segundos.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={handleRedirectNow} className="w-full bg-forest-600 hover:bg-forest-500 text-white">
-              Ir al torneo ahora
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {registrationResult && (
+        <RegistrationSuccessDialog
+          open={showSuccessDialog}
+          onOpenChange={setShowSuccessDialog}
+          tournamentId={registrationResult.tournamentId}
+        />
+      )}
     </div>
   )
 }

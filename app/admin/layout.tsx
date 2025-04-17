@@ -30,7 +30,7 @@ export default function AdminLayout({
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/admin" className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-jade-400">Comunidad Jade</span>
+              <span className="text-xl font-bold text-jade-400">Lineage 2</span>
               <span className="text-xs text-jade-400 tracking-widest font-medium">ADMIN</span>
             </Link>
 

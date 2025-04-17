@@ -43,7 +43,6 @@ export interface Team {
   expelled_at?: string
   rejection_reason?: string
   expulsion_reason?: string
-  phone?: string // Añadimos el campo phone
 }
 
 export interface TeamMember {

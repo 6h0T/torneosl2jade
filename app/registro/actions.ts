@@ -10,7 +10,7 @@ async function getActiveTournament() {
     console.error("Failed to create Supabase client")
     return null
   }
-  
+
   const { data: tournaments, error } = await supabase
     .from("tournaments")
     .select("*")
@@ -33,13 +33,13 @@ export async function registerTeam(formData: FormData) {
 
     // Obtain team members data
     const member1Name = formData.get("member1Name") as string
-    const member1Class = formData.get("member1Class") ? formData.get("member1Class") as string : "No especificada"
+    const member1Class = formData.get("member1Class") ? (formData.get("member1Class") as string) : "No especificada"
 
     const member2Name = formData.get("member2Name") as string
-    const member2Class = formData.get("member2Class") ? formData.get("member2Class") as string : "No especificada"
+    const member2Class = formData.get("member2Class") ? (formData.get("member2Class") as string) : "No especificada"
 
     const member3Name = formData.get("member3Name") as string
-    const member3Class = formData.get("member3Class") ? formData.get("member3Class") as string : "No especificada"
+    const member3Class = formData.get("member3Class") ? (formData.get("member3Class") as string) : "No especificada"
 
     // Validate data
     if (!teamName || !member1Name || !member2Name || !member3Name) {
@@ -87,7 +87,7 @@ export async function registerTeam(formData: FormData) {
     let teamPhone = ""
     const rawCountryCode = formData.get("countryCode")
     const rawPhoneNumber = formData.get("phoneNumber")
-    
+
     if (rawCountryCode && rawPhoneNumber) {
       const countryCode = rawCountryCode.toString()
       const phoneNumber = rawPhoneNumber.toString()
@@ -103,16 +103,13 @@ export async function registerTeam(formData: FormData) {
       status: "pending",
       created_at: new Date().toISOString(),
     }
-    
+
     // Only add phone if it has a value
     if (teamPhone) {
       teamToInsert.phone = teamPhone
     }
 
-    const { data: teamData, error: teamError } = await supabase
-      .from("teams")
-      .insert([teamToInsert])
-      .select()
+    const { data: teamData, error: teamError } = await supabase.from("teams").insert([teamToInsert]).select()
 
     if (teamError) {
       console.error("Error inserting team:", teamError)

@@ -35,7 +35,7 @@ export const metadata = {
       { url: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
     ],
   },
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 // Update the RootLayout component to conditionally render StreamsBox
@@ -64,5 +64,4 @@ export default function RootLayout({
   )
 }
 
-
-import './globals.css'
+import "./globals.css"

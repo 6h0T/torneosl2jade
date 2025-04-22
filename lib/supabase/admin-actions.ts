@@ -911,7 +911,7 @@ export async function updateTeam(data: {
       .update({
         name: data.teamName,
         phone: data.teamPhone || null,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(), // Ahora podemos usar updated_at
       })
       .eq("id", data.teamId)
 
@@ -957,7 +957,7 @@ export async function updateTeam(data: {
   }
 }
 
-// Función para cambiar el estado de un equipo
+// Función para cambiar el estado de un equipo - restaurada con updated_at
 export async function changeTeamStatus(data: {
   teamId: number
   status: "approved" | "rejected" | "expelled"
@@ -988,17 +988,34 @@ export async function changeTeamStatus(data: {
       // Limpiar campos de aprobación si existían
       updateData.approved_at = null
     } else if (data.status === "expelled") {
-      // Para el estado "expelled", solo cambiamos el estado sin usar campos adicionales
-      // ya que la columna expelled_at no existe en la base de datos
-      // Opcionalmente, podemos usar el campo rejection_reason para almacenar el motivo
-      updateData.rejected_at = new Date().toISOString() // Usamos rejected_at como timestamp
+      // Para el estado "expelled", usamos rejected_at como timestamp
+      updateData.rejected_at = new Date().toISOString()
       updateData.rejection_reason = `[Expulsado] ${data.reason || "No se proporcionó motivo"}`
       // Limpiar campos de aprobación si existían
       updateData.approved_at = null
     }
 
-    // Actualizar el equipo
-    const { error } = await supabase.from("teams").update(updateData).eq("id", data.teamId)
+    console.log("Datos a actualizar:", JSON.stringify(updateData, null, 2))
+
+    // Actualizar el equipo - Primero verificamos si existe
+    const { data: team, error: teamError } = await supabase
+      .from("teams")
+      .select("id, name, status")
+      .eq("id", data.teamId)
+      .single()
+
+    if (teamError) {
+      console.error("Error al verificar el equipo:", teamError)
+      return {
+        success: false,
+        message: "Error al verificar el equipo: " + teamError.message,
+      }
+    }
+
+    console.log("Equipo encontrado:", team)
+
+    // Ahora actualizamos el equipo
+    const { data: updatedTeam, error } = await supabase.from("teams").update(updateData).eq("id", data.teamId).select()
 
     if (error) {
       console.error("Error al cambiar el estado del equipo:", error)
@@ -1007,6 +1024,8 @@ export async function changeTeamStatus(data: {
         message: "Error al cambiar el estado del equipo: " + error.message,
       }
     }
+
+    console.log("Equipo actualizado:", updatedTeam)
 
     // Si el equipo fue aprobado, verificar y actualizar el estado del torneo si es necesario
     if (data.status === "approved") {
@@ -1038,7 +1057,7 @@ export async function changeTeamStatus(data: {
   }
 }
 
-// Función para eliminar un equipo
+// Función para eliminar un equipo - asegurémonos de que también revalida correctamente
 export async function deleteTeam(teamId: number, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
@@ -1069,10 +1088,18 @@ export async function deleteTeam(teamId: number, tournamentId: number) {
       }
     }
 
-    // 3. Revalidar las rutas necesarias
-    revalidatePath(`/torneos/${tournamentId}`)
-    revalidatePath(`/torneos/${tournamentId}/equipos`)
-    revalidatePath(`/admin/torneos/${tournamentId}`)
+    // 3. Revalidar las rutas necesarias - asegurarse de que esto se ejecute correctamente
+    try {
+      // Forzar la revalidación de todas las rutas relevantes
+      revalidatePath(`/torneos/${tournamentId}`)
+      revalidatePath(`/torneos/${tournamentId}/equipos`)
+      revalidatePath(`/admin/torneos/${tournamentId}`)
+      // También revalidar la ruta actual
+      revalidatePath(`/admin/torneos/${tournamentId}`, "page")
+    } catch (revalidateError) {
+      console.error("Error al revalidar rutas:", revalidateError)
+      // No abortamos la operación si falla la revalidación
+    }
 
     return {
       success: true,

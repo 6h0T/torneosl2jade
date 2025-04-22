@@ -23,23 +23,24 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-  // Effect to handle automatic deletion of expelled teams
+  // Efecto para manejar la eliminación automática de equipos expulsados
   useEffect(() => {
-    // If the team is expelled, set a timeout to delete it after 1 minute
-    if (currentStatus === "expelled") {
+    // Si el equipo es expulsado, set a timeout to delete it after 1 minute
+    if (selectedStatus === "expelled" && message?.type === "success") {
       const timer = setTimeout(async () => {
         try {
           await deleteTeam(team.id, tournamentId)
-          // The page will be revalidated by the deleteTeam function
+          // La página será revalidada por la función deleteTeam
         } catch (error) {
           console.error("Error deleting expelled team:", error)
         }
-      }, 60000) // 60000ms = 1 minute
+      }, 60000) // 60000ms = 1 minuto
 
       return () => clearTimeout(timer)
     }
-  }, [currentStatus, team.id, tournamentId])
+  }, [selectedStatus, message, team.id, tournamentId])
 
+  // Función para cambiar el estado del equipo
   const handleStatusChange = async () => {
     if (selectedStatus === currentStatus) {
       setMessage({
@@ -68,7 +69,7 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
         tournamentId,
       })
 
-      // Add additional message for expelled teams
+      // Añadir mensaje adicional para equipos expulsados
       if (result.success && selectedStatus === "expelled") {
         result.message += " El equipo será eliminado automáticamente en 1 minuto."
       }
@@ -79,8 +80,20 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
       })
 
       if (result.success) {
+        // Show success message
+        setMessage({
+          type: "success",
+          text: result.message,
+        })
+
+        // Wait longer before closing dialog and reloading
         setTimeout(() => {
-          window.location.reload()
+          setIsDialogOpen(false)
+
+          // Add another delay before reloading to ensure DB updates are complete
+          setTimeout(() => {
+            window.location.reload()
+          }, 1000) // 1 second delay before reload
         }, 1500)
       }
     } catch (error) {

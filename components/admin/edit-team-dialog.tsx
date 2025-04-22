@@ -61,10 +61,10 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
         teamId: team.id,
         teamName,
         teamPhone,
-        members: teamMembers.map(member => ({
+        members: teamMembers.map((member) => ({
           id: member.id,
           name: member.name,
-          character_class: "No especificada" // Valor fijo
+          character_class: "No especificada", // Valor fijo
         })),
         tournamentId,
       })

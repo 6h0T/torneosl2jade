@@ -1,8 +1,12 @@
+// Asegurémonos de que la página se revalida correctamente
+// Añade o modifica esta línea al principio del archivo
+export const dynamic = "force-dynamic"
+export const revalidate = 0 // Esto deshabilita el caché para esta página
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Calendar, Phone } from "lucide-react"
+import { ArrowLeft, Calendar, Phone, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { getTournamentById, getTeamsByTournament, getTeamMembers, getMatchesByTournament } from "@/lib/supabase/actions"
 import { generateInitialBracket, deleteAllMatches } from "@/lib/supabase/admin-actions"
@@ -11,9 +15,7 @@ import MatchResultForm from "@/components/admin/match-result-form"
 import MatchSchedulingForm from "@/components/admin/match-scheduling-form"
 import TeamEditButton from "@/components/admin/team-edit-button"
 import TeamStatusChanger from "@/components/admin/team-status-changer"
-
-// Add this function at the top level of the file, outside of the component
-export const revalidate = 0 // This disables caching for this page
+import type { Match as MatchType, Team as TeamType, TeamMember as TeamMemberType } from "@/lib/types"
 
 // Acciones del servidor - definidas fuera del componente
 async function generateBracketAction(formData: FormData): Promise<void> {
@@ -45,8 +47,16 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
   const rejectedTeams = teams.filter((team) => team.status === "rejected")
   const expelledTeams = teams.filter((team) => team.status === "expelled")
 
-  // Obtener partidos
-  const matches = await getMatchesByTournament(tournamentId)
+  // Obtener partidos con manejo de errores
+  let matches: MatchType[] = []
+  let matchesError: Error | null = null
+  try {
+    matches = await getMatchesByTournament(tournamentId)
+  } catch (error) {
+    console.error("Error fetching matches:", error)
+    matchesError = error instanceof Error ? error : new Error(String(error))
+  }
+
   const pendingMatches = matches.filter((match) => match.status === "pending" && match.team1_id && match.team2_id)
   const completedMatches = matches.filter((match) => match.status === "completed")
   const upcomingMatches = matches.filter(
@@ -58,15 +68,33 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href="/admin" className="flex items-center text-jade-400 mb-6 hover:underline">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver al panel de administración
-      </Link>
+      <div className="flex justify-between items-center mb-6">
+        <Link href="/admin" className="flex items-center text-jade-400 hover:underline">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver al panel de administración
+        </Link>
+      </div>
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-jade-400 mb-2">Administrar Torneo</h1>
         <p className="text-gray-300">{tournament.title}</p>
       </div>
+
+      {matchesError && (
+        <div className="mb-6 p-4 bg-red-900/30 border border-red-800 rounded-md">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-400 mr-3 mt-0.5" />
+            <div>
+              <p className="text-red-200 font-medium">Error al cargar los partidos</p>
+              <p className="text-red-300 text-sm mt-1">
+                Se produjo un error al intentar cargar los partidos del torneo. Intenta recargar la página o verifica la
+                conexión a la base de datos.
+              </p>
+              <p className="text-red-400 text-xs mt-2">Error: {matchesError.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="equipos" className="w-full">
         <TabsList className="grid w-full md:w-[400px] grid-cols-3 mb-4 bg-black/80 border border-jade-800/30">
@@ -231,7 +259,7 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
                 ) : (
                   <div className="space-y-4">
                     {pendingMatches.map((match) => (
-                      <MatchResultForm key={match.id} match={match} tournamentId={tournamentId} />
+                      <MatchResultForm key={match.id} match={match as any} tournamentId={tournamentId} />
                     ))}
                   </div>
                 )}
@@ -323,7 +351,7 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
                           <span>Hora: {match.match_time || "Por definir"}</span>
                         </div>
                         <div className="mt-3">
-                          <MatchSchedulingForm match={match} tournamentId={tournamentId} />
+                          <MatchSchedulingForm match={match as any} tournamentId={tournamentId} />
                         </div>
                       </div>
                     ))}
@@ -346,7 +374,7 @@ export default async function AdminTournamentPage({ params }: { params: { id: st
                 ) : (
                   <div className="space-y-4">
                     {unscheduledMatches.map((match) => (
-                      <MatchSchedulingForm key={match.id} match={match} tournamentId={tournamentId} />
+                      <MatchSchedulingForm key={match.id} match={match as any} tournamentId={tournamentId} />
                     ))}
                   </div>
                 )}
@@ -364,9 +392,21 @@ async function TeamCard({
   team,
   tournamentId,
   status,
-}: { team: any; tournamentId: number; status: "pending" | "approved" | "rejected" | "expelled" }) {
-  // Obtener miembros del equipo
-  const members = await getTeamMembers(team.id)
+}: {
+  team: TeamType
+  tournamentId: number
+  status: "pending" | "approved" | "rejected" | "expelled"
+}) {
+  // Obtener miembros del equipo con manejo de errores
+  let members: TeamMemberType[] = []
+  let error: Error | null = null
+
+  try {
+    members = await getTeamMembers(team.id)
+  } catch (err) {
+    console.error(`Error fetching members for team ${team.id}:`, err)
+    error = err instanceof Error ? err : new Error(String(err))
+  }
 
   return (
     <div className="bg-black/60 border border-jade-800/30 rounded-lg p-3">
@@ -374,18 +414,33 @@ async function TeamCard({
         <h3 className="font-medium text-jade-400">{team.name}</h3>
         <div className="flex items-center space-x-2">
           {/* Eliminar el badge redundante y dejar solo el TeamStatusChanger */}
-          <TeamStatusChanger team={team} tournamentId={tournamentId} currentStatus={status} />
-          {status === "approved" && <TeamEditButton team={team} members={members} tournamentId={tournamentId} />}
+          <TeamStatusChanger team={team as any} tournamentId={tournamentId} currentStatus={status} />
+          {status === "approved" && (
+            <TeamEditButton team={team as any} members={members as any} tournamentId={tournamentId} />
+          )}
         </div>
       </div>
-      <div className="space-y-1 text-sm">
-        {members.map((member) => (
-          <div key={member.id} className="flex justify-between">
-            <span>{member.name}</span>
-            <span className="text-gray-400 text-xs">{member.character_class}</span>
-          </div>
-        ))}
-      </div>
+
+      {error ? (
+        <div className="text-red-400 text-sm flex items-center">
+          <AlertCircle className="h-4 w-4 mr-1" />
+          Error al cargar miembros del equipo
+        </div>
+      ) : (
+        <div className="space-y-1 text-sm">
+          {members.length > 0 ? (
+            members.map((member) => (
+              <div key={member.id} className="flex justify-between">
+                <span>{member.name}</span>
+                <span className="text-gray-400 text-xs">{member.character_class}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400 text-xs italic">No hay información de miembros disponible.</p>
+          )}
+        </div>
+      )}
+
       <div className="mt-2 text-xs">
         {/* Mostrar el teléfono en verde por encima del estado */}
         {team.phone && status === "pending" && (
@@ -395,18 +450,20 @@ async function TeamCard({
           </div>
         )}
         <div className="text-gray-400">
-          {status === "approved" && <span>Aprobado: {new Date(team.approved_at).toLocaleDateString()}</span>}
-          {status === "rejected" && (
+          {status === "approved" && team.approved_at && (
+            <span>Aprobado: {new Date(team.approved_at).toLocaleDateString()}</span>
+          )}
+          {status === "rejected" && team.rejected_at && (
             <>
               <span>Rechazado: {new Date(team.rejected_at).toLocaleDateString()}</span>
               <p className="mt-1">Motivo: {team.rejection_reason || "No especificado"}</p>
             </>
           )}
-          {status === "expelled" && (
+          {status === "expelled" && team.rejected_at && (
             <>
-              <span>Expulsado: {new Date(team.expelled_at).toLocaleDateString()}</span>
+              <span>Expulsado: {new Date(team.rejected_at).toLocaleDateString()}</span>
               <p className="mt-1">
-                Motivo: {team.expulsion_reason ? team.expulsion_reason.replace("[Expulsado] ", "") : "No especificado"}
+                Motivo: {team.rejection_reason ? team.rejection_reason.replace("[Expulsado] ", "") : "No especificado"}
               </p>
             </>
           )}

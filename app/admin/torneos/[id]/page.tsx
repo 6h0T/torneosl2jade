@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Calendar } from "lucide-react"
+import { ArrowLeft, Calendar, Phone } from "lucide-react"
 import Link from "next/link"
 import { getTournamentById, getTeamsByTournament, getTeamMembers, getMatchesByTournament } from "@/lib/supabase/actions"
 import { generateInitialBracket, deleteAllMatches } from "@/lib/supabase/admin-actions"
@@ -16,18 +16,16 @@ import TeamStatusChanger from "@/components/admin/team-status-changer"
 export const revalidate = 0 // This disables caching for this page
 
 // Acciones del servidor - definidas fuera del componente
-async function generateBracketAction(formData: FormData) {
+async function generateBracketAction(formData: FormData): Promise<void> {
   "use server"
   const tournamentId = Number(formData.get("tournamentId"))
   await generateInitialBracket(tournamentId)
-  return { success: true }
 }
 
-async function deleteMatchesAction(formData: FormData) {
+async function deleteMatchesAction(formData: FormData): Promise<void> {
   "use server"
   const tournamentId = Number(formData.get("tournamentId"))
   await deleteAllMatches(tournamentId)
-  return { success: true }
 }
 
 export default async function AdminTournamentPage({ params }: { params: { id: string } }) {
@@ -388,21 +386,32 @@ async function TeamCard({
           </div>
         ))}
       </div>
-      <div className="mt-2 text-xs text-gray-400">
-        {status === "approved" && <span>Aprobado: {new Date(team.approved_at).toLocaleDateString()}</span>}
-        {status === "rejected" && (
-          <>
-            <span>Rechazado: {new Date(team.rejected_at).toLocaleDateString()}</span>
-            <p className="mt-1">Motivo: {team.rejection_reason || "No especificado"}</p>
-          </>
+      <div className="mt-2 text-xs">
+        {/* Mostrar el teléfono en verde por encima del estado */}
+        {team.phone && status === "pending" && (
+          <div className="text-green-500 font-medium mb-1">
+            <Phone className="h-3 w-3 inline-block mr-1" />
+            {team.phone}
+          </div>
         )}
-        {status === "expelled" && (
-          <>
-            <span>Expulsado: {new Date(team.expelled_at).toLocaleDateString()}</span>
-            <p className="mt-1">Motivo: {team.expulsion_reason || "No especificado"}</p>
-          </>
-        )}
-        {status === "pending" && <span>Pendiente de aprobación</span>}
+        <div className="text-gray-400">
+          {status === "approved" && <span>Aprobado: {new Date(team.approved_at).toLocaleDateString()}</span>}
+          {status === "rejected" && (
+            <>
+              <span>Rechazado: {new Date(team.rejected_at).toLocaleDateString()}</span>
+              <p className="mt-1">Motivo: {team.rejection_reason || "No especificado"}</p>
+            </>
+          )}
+          {status === "expelled" && (
+            <>
+              <span>Expulsado: {new Date(team.expelled_at).toLocaleDateString()}</span>
+              <p className="mt-1">
+                Motivo: {team.expulsion_reason ? team.expulsion_reason.replace("[Expulsado] ", "") : "No especificado"}
+              </p>
+            </>
+          )}
+          {status === "pending" && <span>Pendiente de aprobación</span>}
+        </div>
       </div>
     </div>
   )

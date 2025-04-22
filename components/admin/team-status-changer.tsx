@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react"
-import { changeTeamStatus } from "@/lib/supabase/admin-actions"
+import { changeTeamStatus, deleteTeam } from "@/lib/supabase/admin-actions"
 import type { Team } from "@/lib/types"
 
 interface TeamStatusChangerProps {
@@ -22,6 +22,23 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  // Effect to handle automatic deletion of expelled teams
+  useEffect(() => {
+    // If the team is expelled, set a timeout to delete it after 1 minute
+    if (currentStatus === "expelled") {
+      const timer = setTimeout(async () => {
+        try {
+          await deleteTeam(team.id, tournamentId)
+          // The page will be revalidated by the deleteTeam function
+        } catch (error) {
+          console.error("Error deleting expelled team:", error)
+        }
+      }, 60000) // 60000ms = 1 minute
+
+      return () => clearTimeout(timer)
+    }
+  }, [currentStatus, team.id, tournamentId])
 
   const handleStatusChange = async () => {
     if (selectedStatus === currentStatus) {
@@ -50,6 +67,11 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
         reason: reason,
         tournamentId,
       })
+
+      // Add additional message for expelled teams
+      if (result.success && selectedStatus === "expelled") {
+        result.message += " El equipo será eliminado automáticamente en 1 minuto."
+      }
 
       setMessage({
         type: result.success ? "success" : "error",

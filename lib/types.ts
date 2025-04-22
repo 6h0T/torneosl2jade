@@ -32,6 +32,9 @@ export interface TournamentPrize {
 }
 
 // Tipos para equipos
+// Update the Team interface to match the actual database schema
+// by making expelled_at and expulsion_reason optional
+
 export interface Team {
   id: number
   name: string
@@ -40,10 +43,8 @@ export interface Team {
   created_at: string
   approved_at?: string
   rejected_at?: string
-  expelled_at?: string
   rejection_reason?: string
-  expulsion_reason?: string
-  phone?: string  // Campo para el número de teléfono
+  phone?: string // Add the phone field
 }
 
 export interface TeamMember {

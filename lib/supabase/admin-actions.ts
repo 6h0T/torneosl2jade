@@ -880,7 +880,7 @@ export async function updateTeam(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
-    
+
     if (!supabase) {
       throw new Error("No se pudo crear el cliente de Supabase")
     }
@@ -937,8 +937,6 @@ export async function updateTeam(data: {
   }
 }
 
-// Add this function to the existing admin-actions.ts file
-
 // Función para cambiar el estado de un equipo
 export async function changeTeamStatus(data: {
   teamId: number
@@ -957,25 +955,22 @@ export async function changeTeamStatus(data: {
     // Agregar campos específicos según el estado
     if (data.status === "approved") {
       updateData.approved_at = new Date().toISOString()
-      // Limpiar campos de rechazo y expulsión si existían
+      // Limpiar campos de rechazo si existían
       updateData.rejected_at = null
-      updateData.expelled_at = null
       updateData.rejection_reason = null
-      updateData.expulsion_reason = null
     } else if (data.status === "rejected") {
       updateData.rejected_at = new Date().toISOString()
       updateData.rejection_reason = data.reason || "No se proporcionó motivo"
-      // Limpiar campos de aprobación y expulsión si existían
+      // Limpiar campos de aprobación si existían
       updateData.approved_at = null
-      updateData.expelled_at = null
-      updateData.expulsion_reason = null
     } else if (data.status === "expelled") {
-      updateData.expelled_at = new Date().toISOString()
-      updateData.expulsion_reason = data.reason || "No se proporcionó motivo"
-      // Limpiar campos de aprobación y rechazo si existían
+      // Para el estado "expelled", solo cambiamos el estado sin usar campos adicionales
+      // ya que la columna expelled_at no existe en la base de datos
+      // Opcionalmente, podemos usar el campo rejection_reason para almacenar el motivo
+      updateData.rejected_at = new Date().toISOString() // Usamos rejected_at como timestamp
+      updateData.rejection_reason = `[Expulsado] ${data.reason || "No se proporcionó motivo"}`
+      // Limpiar campos de aprobación si existían
       updateData.approved_at = null
-      updateData.rejected_at = null
-      updateData.rejection_reason = null
     }
 
     // Actualizar el equipo
@@ -1010,6 +1005,55 @@ export async function changeTeamStatus(data: {
     return {
       success: false,
       message: "Error inesperado al cambiar el estado del equipo.",
+    }
+  }
+}
+
+// Función para eliminar un equipo
+export async function deleteTeam(teamId: number, tournamentId: number) {
+  try {
+    const supabase = createServerComponentClient()
+
+    if (!supabase) {
+      throw new Error("No se pudo crear el cliente de Supabase")
+    }
+
+    // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
+    const { error: membersError } = await supabase.from("team_members").delete().eq("team_id", teamId)
+
+    if (membersError) {
+      console.error("Error al eliminar miembros del equipo:", membersError)
+      return {
+        success: false,
+        message: "Error al eliminar los miembros del equipo: " + membersError.message,
+      }
+    }
+
+    // 2. Ahora eliminamos el equipo
+    const { error: teamError } = await supabase.from("teams").delete().eq("id", teamId)
+
+    if (teamError) {
+      console.error("Error al eliminar equipo:", teamError)
+      return {
+        success: false,
+        message: "Error al eliminar el equipo: " + teamError.message,
+      }
+    }
+
+    // 3. Revalidar las rutas necesarias
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/torneos/${tournamentId}/equipos`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
+
+    return {
+      success: true,
+      message: "Equipo eliminado correctamente.",
+    }
+  } catch (error) {
+    console.error("Error:", error)
+    return {
+      success: false,
+      message: "Error inesperado al eliminar el equipo.",
     }
   }
 }

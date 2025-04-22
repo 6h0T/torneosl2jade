@@ -30,6 +30,13 @@ export async function createTournament(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // 1. Insertar el torneo
     const { data: tournamentData, error: tournamentError } = await supabase
@@ -96,13 +103,9 @@ export async function createTournament(data: {
     }
 
     // 4. Revalidar las rutas necesarias
-    try {
-      revalidatePath("/admin")
-      revalidatePath("/")
-      revalidatePath(`/torneos/${tournamentId}`)
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
+    revalidatePath("/admin")
+    revalidatePath("/")
+    revalidatePath(`/torneos/${tournamentId}`)
 
     return {
       success: true,
@@ -147,6 +150,13 @@ export async function updateTournament(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // 1. Actualizar el torneo
     const { error: tournamentError } = await supabase
@@ -225,15 +235,11 @@ export async function updateTournament(data: {
     }
 
     // 6. Revalidar las rutas necesarias
-    try {
-      revalidatePath("/admin")
-      revalidatePath("/")
-      revalidatePath(`/torneos/${data.id}`)
-      revalidatePath(`/admin/torneos/${data.id}`)
-      revalidatePath(`/admin/torneos/editar/${data.id}`)
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
+    revalidatePath("/admin")
+    revalidatePath("/")
+    revalidatePath(`/torneos/${data.id}`)
+    revalidatePath(`/admin/torneos/${data.id}`)
+    revalidatePath(`/admin/torneos/editar/${data.id}`)
 
     return {
       success: true,
@@ -253,6 +259,13 @@ export async function updateTournament(data: {
 export async function generateInitialBracket(tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // 1. Obtener todos los equipos aprobados para el torneo
     const { data: teams, error: teamsError } = await supabase
@@ -423,6 +436,13 @@ export async function generateInitialBracket(tournamentId: number) {
 export async function updateMatchSchedule(matchId: number, date: string, time: string, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // Verificar si el partido existe
     const { data: match, error: matchError } = await supabase.from("matches").select("*").eq("id", matchId).single()
@@ -474,6 +494,13 @@ export async function updateMatchSchedule(matchId: number, date: string, time: s
 export async function updateMatchResult(matchId: number, team1Score: number, team2Score: number, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // 1. Obtener información del partido
     const { data: match, error: matchError } = await supabase.from("matches").select("*").eq("id", matchId).single()
@@ -549,6 +576,12 @@ export async function updateMatchResult(matchId: number, team1Score: number, tea
 async function advanceWinnerToNextRound(match: Match, winnerId: number, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      console.error("Error: No se pudo crear el cliente de Supabase")
+      return
+    }
+
     let nextPhase = ""
     let matchPosition = 0
 
@@ -601,6 +634,11 @@ async function advanceWinnerToNextRound(match: Match, winnerId: number, tourname
 async function updateTeamRankings(winnerId: number, loserId: number, phase: string) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      console.error("Error: No se pudo crear el cliente de Supabase")
+      return
+    }
 
     // Puntos por victoria en un partido
     const victoryPoints = 10
@@ -690,6 +728,13 @@ async function updateTeamRankings(winnerId: number, loserId: number, phase: stri
 export async function approveTeam(teamId: number, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // Actualizar el estado del equipo a "approved"
     const { error } = await supabase
@@ -712,13 +757,9 @@ export async function approveTeam(teamId: number, tournamentId: number) {
     await checkAndUpdateTournamentStatus(tournamentId)
 
     // Revalidar las páginas
-    try {
-      revalidatePath(`/torneos/${tournamentId}`)
-      revalidatePath(`/admin/torneos/${tournamentId}`)
-      revalidatePath("/")
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
+    revalidatePath("/")
 
     return {
       success: true,
@@ -737,6 +778,13 @@ export async function approveTeam(teamId: number, tournamentId: number) {
 export async function rejectTeam(teamId: number, reason: string, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // Actualizar el estado del equipo a "rejected"
     const { error } = await supabase
@@ -757,12 +805,8 @@ export async function rejectTeam(teamId: number, reason: string, tournamentId: n
     }
 
     // Revalidar las páginas
-    try {
-      revalidatePath(`/torneos/${tournamentId}`)
-      revalidatePath(`/admin/torneos/${tournamentId}`)
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
 
     return {
       success: true,
@@ -781,6 +825,13 @@ export async function rejectTeam(teamId: number, reason: string, tournamentId: n
 export async function deleteAllMatches(tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // Eliminar todos los partidos del torneo
     const { error } = await supabase.from("matches").delete().eq("tournament_id", tournamentId)
@@ -794,12 +845,8 @@ export async function deleteAllMatches(tournamentId: number) {
     }
 
     // Revalidar las páginas
-    try {
-      revalidatePath(`/torneos/${tournamentId}`)
-      revalidatePath(`/admin/torneos/${tournamentId}`)
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
 
     return {
       success: true,
@@ -818,6 +865,13 @@ export async function deleteAllMatches(tournamentId: number) {
 export async function checkAndUpdateTournamentStatus(tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
 
     // Obtener información del torneo
     const { data: tournament, error: tournamentError } = await supabase
@@ -900,18 +954,21 @@ export async function updateTeam(data: {
 }) {
   try {
     const supabase = createServerComponentClient()
-
+    
     if (!supabase) {
-      throw new Error("No se pudo crear el cliente de Supabase")
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
     }
 
-    // 1. Actualizar el nombre del equipo
+    // 1. Actualizar el nombre del equipo y teléfono
     const { error: teamError } = await supabase
       .from("teams")
       .update({
         name: data.teamName,
         phone: data.teamPhone || null,
-        updated_at: new Date().toISOString(), // Ahora podemos usar updated_at
+        updated_at: new Date().toISOString(),
       })
       .eq("id", data.teamId)
 
@@ -929,7 +986,7 @@ export async function updateTeam(data: {
         .from("team_members")
         .update({
           name: member.name,
-          character_class: "No especificada", // Siempre fijamos este valor
+          character_class: "No especificada", // Valor por defecto
         })
         .eq("id", member.id)
 
@@ -957,18 +1014,23 @@ export async function updateTeam(data: {
   }
 }
 
-// Función para cambiar el estado de un equipo - restaurada con updated_at
+// Add this function to the existing admin-actions.ts file
+
+// Función para cambiar el estado de un equipo
 export async function changeTeamStatus(data: {
   teamId: number
-  status: "approved" | "rejected" | "expelled"
+  status: "approved" | "rejected" | "expelled" | "pending"
   reason?: string
   tournamentId: number
 }) {
   try {
     const supabase = createServerComponentClient()
-
+    
     if (!supabase) {
-      throw new Error("No se pudo crear el cliente de Supabase")
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
     }
 
     // Preparar los datos para actualizar
@@ -979,43 +1041,36 @@ export async function changeTeamStatus(data: {
     // Agregar campos específicos según el estado
     if (data.status === "approved") {
       updateData.approved_at = new Date().toISOString()
-      // Limpiar campos de rechazo si existían
+      // Limpiar campos de rechazo y expulsión si existían
       updateData.rejected_at = null
+      updateData.expelled_at = null
       updateData.rejection_reason = null
+      updateData.expulsion_reason = null
     } else if (data.status === "rejected") {
       updateData.rejected_at = new Date().toISOString()
       updateData.rejection_reason = data.reason || "No se proporcionó motivo"
-      // Limpiar campos de aprobación si existían
+      // Limpiar campos de aprobación y expulsión si existían
       updateData.approved_at = null
+      updateData.expelled_at = null
+      updateData.expulsion_reason = null
     } else if (data.status === "expelled") {
-      // Para el estado "expelled", usamos rejected_at como timestamp
-      updateData.rejected_at = new Date().toISOString()
-      updateData.rejection_reason = `[Expulsado] ${data.reason || "No se proporcionó motivo"}`
-      // Limpiar campos de aprobación si existían
+      updateData.expelled_at = new Date().toISOString()
+      updateData.expulsion_reason = data.reason || "No se proporcionó motivo"
+      // Limpiar campos de aprobación y rechazo si existían
       updateData.approved_at = null
+      updateData.rejected_at = null
+      updateData.rejection_reason = null
+    } else if (data.status === "pending") {
+      // Restablecer a pendiente, limpiar todos los campos relacionados con otros estados
+      updateData.approved_at = null
+      updateData.rejected_at = null
+      updateData.expelled_at = null
+      updateData.rejection_reason = null
+      updateData.expulsion_reason = null
     }
 
-    console.log("Datos a actualizar:", JSON.stringify(updateData, null, 2))
-
-    // Actualizar el equipo - Primero verificamos si existe
-    const { data: team, error: teamError } = await supabase
-      .from("teams")
-      .select("id, name, status")
-      .eq("id", data.teamId)
-      .single()
-
-    if (teamError) {
-      console.error("Error al verificar el equipo:", teamError)
-      return {
-        success: false,
-        message: "Error al verificar el equipo: " + teamError.message,
-      }
-    }
-
-    console.log("Equipo encontrado:", team)
-
-    // Ahora actualizamos el equipo
-    const { data: updatedTeam, error } = await supabase.from("teams").update(updateData).eq("id", data.teamId).select()
+    // Actualizar el equipo
+    const { error } = await supabase.from("teams").update(updateData).eq("id", data.teamId)
 
     if (error) {
       console.error("Error al cambiar el estado del equipo:", error)
@@ -1025,28 +1080,27 @@ export async function changeTeamStatus(data: {
       }
     }
 
-    console.log("Equipo actualizado:", updatedTeam)
-
     // Si el equipo fue aprobado, verificar y actualizar el estado del torneo si es necesario
     if (data.status === "approved") {
       await checkAndUpdateTournamentStatus(data.tournamentId)
     }
 
     // Revalidar las rutas necesarias
-    try {
-      revalidatePath(`/torneos/${data.tournamentId}`)
-      revalidatePath(`/torneos/${data.tournamentId}/equipos`)
-      revalidatePath(`/admin/torneos/${data.tournamentId}`)
-    } catch (revalidateError) {
-      console.error("Error al revalidar rutas:", revalidateError)
-      // No abortamos la operación si falla la revalidación
-    }
+    revalidatePath(`/torneos/${data.tournamentId}`)
+    revalidatePath(`/torneos/${data.tournamentId}/equipos`)
+    revalidatePath(`/admin/torneos/${data.tournamentId}`)
 
     return {
       success: true,
       message: `Equipo ${
-        data.status === "approved" ? "aprobado" : data.status === "rejected" ? "rechazado" : "expulsado"
-      } correctamente.${data.status === "expelled" ? " Se eliminará automáticamente en 1 minuto." : ""}`,
+        data.status === "approved" 
+          ? "aprobado" 
+          : data.status === "rejected" 
+            ? "rechazado" 
+            : data.status === "pending" 
+              ? "marcado como pendiente" 
+              : "expulsado"
+      } correctamente.`,
     }
   } catch (error) {
     console.error("Error:", error)
@@ -1057,59 +1111,56 @@ export async function changeTeamStatus(data: {
   }
 }
 
-// Función para eliminar un equipo - asegurémonos de que también revalida correctamente
-export async function deleteTeam(teamId: number, tournamentId: number) {
+// Función para eliminar todos los equipos expulsados
+export async function deleteExpelledTeams(tournamentId?: number) {
   try {
     const supabase = createServerComponentClient()
 
     if (!supabase) {
-      throw new Error("No se pudo crear el cliente de Supabase")
-    }
-
-    // 1. Primero eliminamos los miembros del equipo (por la restricción de clave foránea)
-    const { error: membersError } = await supabase.from("team_members").delete().eq("team_id", teamId)
-
-    if (membersError) {
-      console.error("Error al eliminar miembros del equipo:", membersError)
+      console.error("Error: No se pudo crear el cliente de Supabase")
       return {
         success: false,
-        message: "Error al eliminar los miembros del equipo: " + membersError.message,
+        message: "Error al conectar con la base de datos",
       }
     }
 
-    // 2. Ahora eliminamos el equipo
-    const { error: teamError } = await supabase.from("teams").delete().eq("id", teamId)
+    // Consulta base para obtener todos los equipos expulsados
+    let query = supabase.from("teams").delete().eq("status", "expelled")
 
-    if (teamError) {
-      console.error("Error al eliminar equipo:", teamError)
+    // Si se proporciona un ID de torneo, filtrar solo por ese torneo
+    if (tournamentId) {
+      query = query.eq("tournament_id", tournamentId)
+    }
+
+    const { error, count } = await query
+
+    if (error) {
+      console.error("Error al eliminar equipos expulsados:", error)
       return {
         success: false,
-        message: "Error al eliminar el equipo: " + teamError.message,
+        message: "Error al eliminar equipos expulsados: " + error.message,
       }
     }
 
-    // 3. Revalidar las rutas necesarias - asegurarse de que esto se ejecute correctamente
-    try {
-      // Forzar la revalidación de todas las rutas relevantes
+    // Revalidar rutas
+    if (tournamentId) {
       revalidatePath(`/torneos/${tournamentId}`)
       revalidatePath(`/torneos/${tournamentId}/equipos`)
       revalidatePath(`/admin/torneos/${tournamentId}`)
-      // También revalidar la ruta actual
-      revalidatePath(`/admin/torneos/${tournamentId}`, "page")
-    } catch (revalidateError) {
-      console.error("Error al revalidar rutas:", revalidateError)
-      // No abortamos la operación si falla la revalidación
+    } else {
+      revalidatePath("/admin")
+      revalidatePath("/torneos")
     }
 
     return {
       success: true,
-      message: "Equipo eliminado correctamente.",
+      message: `Se han eliminado ${count || 0} equipos expulsados correctamente.`,
     }
   } catch (error) {
     console.error("Error:", error)
     return {
       success: false,
-      message: "Error inesperado al eliminar el equipo.",
+      message: "Error inesperado al eliminar equipos expulsados.",
     }
   }
 }

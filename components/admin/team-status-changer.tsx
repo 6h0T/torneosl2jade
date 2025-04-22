@@ -2,108 +2,94 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { changeTeamStatus } from "@/lib/supabase/actions"
-import { useRouter } from "next/navigation"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react"
+import { changeTeamStatus } from "@/lib/supabase/admin-actions"
+import type { Team } from "@/lib/types"
 
 interface TeamStatusChangerProps {
-  team: {
-    id: number
-    name: string
-    status: string
-  }
+  team: Team
   tournamentId: number
-  currentStatus: "pending" | "approved" | "rejected" | "expelled"
+  currentStatus: string
 }
 
 export default function TeamStatusChanger({ team, tournamentId, currentStatus }: TeamStatusChangerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [targetStatus, setTargetStatus] = useState<string>("")
+  const [selectedStatus, setSelectedStatus] = useState(currentStatus)
   const [reason, setReason] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-  const handleStatusChange = async (newStatus: string) => {
-    // Si el estado es el mismo, no hacer nada
-    if (newStatus === currentStatus) return
-
-    // Si el nuevo estado es rechazado o expulsado, mostrar diálogo para razón
-    if (newStatus === "rejected" || newStatus === "expelled") {
-      setTargetStatus(newStatus)
-      setIsDialogOpen(true)
+  const handleStatusChange = async () => {
+    if (selectedStatus === currentStatus) {
+      setMessage({
+        type: "error",
+        text: "El estado seleccionado es el mismo que el actual.",
+      })
       return
     }
 
-    // Para otros estados, cambiar directamente
-    await updateTeamStatus(newStatus)
-  }
+    if ((selectedStatus === "rejected" || selectedStatus === "expelled") && !reason.trim()) {
+      setMessage({
+        type: "error",
+        text: "Debes proporcionar un motivo para rechazar o expulsar al equipo.",
+      })
+      return
+    }
 
-  const updateTeamStatus = async (newStatus: string, rejectionReason = "") => {
-    setIsLoading(true)
-    setError(null)
+    setIsSubmitting(true)
+    setMessage(null)
 
     try {
-      console.log(`Updating team ${team.id} status from ${currentStatus} to ${newStatus}`)
+      const result = await changeTeamStatus({
+        teamId: team.id,
+        status: selectedStatus as "approved" | "rejected" | "expelled" | "pending",
+        reason: reason,
+        tournamentId,
+      })
 
-      const result = await changeTeamStatus(team.id, newStatus, rejectionReason, tournamentId)
-
-      console.log("Status change result:", result)
+      setMessage({
+        type: result.success ? "success" : "error",
+        text: result.message,
+      })
 
       if (result.success) {
-        // Forzar una recarga completa de la página con un timestamp para evitar caché
-        const timestamp = new Date().getTime()
-        router.push(`/admin/torneos/${tournamentId}?t=${timestamp}`)
-        // También podemos forzar un refresh completo
-        window.location.href = `/admin/torneos/${tournamentId}?t=${timestamp}`
-      } else {
-        setError(result.message || "Error al cambiar el estado del equipo")
-        console.error("Error changing team status:", result)
+        setTimeout(() => {
+          const timestamp = new Date().getTime();
+          window.location.href = `/admin/torneos/${tournamentId}?refresh=${timestamp}`;
+        }, 1500)
       }
-    } catch (err) {
-      console.error("Error in updateTeamStatus:", err)
-      setError("Error inesperado al cambiar el estado del equipo")
+    } catch (error) {
+      console.error("Error al cambiar el estado del equipo:", error)
+      setMessage({
+        type: "error",
+        text: "Error inesperado al cambiar el estado del equipo.",
+      })
     } finally {
-      setIsLoading(false)
-      setIsDialogOpen(false)
+      setIsSubmitting(false)
     }
   }
 
-  const handleDialogConfirm = () => {
-    updateTeamStatus(targetStatus, reason)
-  }
-
-  // Determinar el color del badge según el estado
-  const getBadgeColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-600"
+  // Determinar el color del botón según el estado actual
+  const getButtonStyle = () => {
+    switch (currentStatus) {
       case "approved":
-        return "bg-jade-600"
+        return "text-jade-500 border-jade-500 hover:bg-jade-900/20"
       case "rejected":
-        return "bg-red-600"
+        return "text-red-500 border-red-500 hover:bg-red-900/20"
       case "expelled":
-        return "bg-amber-600"
+        return "text-amber-500 border-amber-500 hover:bg-amber-900/20"
       default:
-        return "bg-gray-600"
+        return "text-gray-500 border-gray-500 hover:bg-gray-900/20"
     }
   }
 
-  // Traducir el estado para mostrar
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "Pendiente"
+  // Determinar el texto del botón según el estado actual
+  const getButtonText = () => {
+    switch (currentStatus) {
       case "approved":
         return "Aprobado"
       case "rejected":
@@ -111,77 +97,106 @@ export default function TeamStatusChanger({ team, tournamentId, currentStatus }:
       case "expelled":
         return "Expulsado"
       default:
-        return status
+        return "Pendiente"
     }
   }
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className={`${getBadgeColor(currentStatus)} text-white`}>
-            {getStatusText(currentStatus)}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {currentStatus !== "pending" && (
-            <DropdownMenuItem onClick={() => handleStatusChange("pending")}>Marcar como Pendiente</DropdownMenuItem>
-          )}
-          {currentStatus !== "approved" && (
-            <DropdownMenuItem onClick={() => handleStatusChange("approved")}>Aprobar Equipo</DropdownMenuItem>
-          )}
-          {currentStatus !== "rejected" && (
-            <DropdownMenuItem onClick={() => handleStatusChange("rejected")}>Rechazar Equipo</DropdownMenuItem>
-          )}
-          {currentStatus !== "expelled" && (
-            <DropdownMenuItem onClick={() => handleStatusChange("expelled")}>Expulsar Equipo</DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="outline"
+        size="sm"
+        className={`text-xs ${getButtonStyle()}`}
+        onClick={() => setIsDialogOpen(true)}
+      >
+        <ShieldAlert className="h-3 w-3 mr-1" />
+        {getButtonText()}
+      </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-black border-jade-800/30">
+        <DialogContent className="bg-black/90 border-jade-800/30">
           <DialogHeader>
-            <DialogTitle className="text-jade-400">
-              {targetStatus === "rejected" ? "Rechazar Equipo" : "Expulsar Equipo"}
-            </DialogTitle>
-            <DialogDescription>
-              {targetStatus === "rejected"
-                ? "Proporciona un motivo para el rechazo del equipo."
-                : "Proporciona un motivo para la expulsión del equipo."}
-            </DialogDescription>
+            <DialogTitle className="text-jade-400">Cambiar Estado del Equipo</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="reason" className="text-right">
-                Motivo
+          <div className="py-4 space-y-4">
+            {message && (
+              <div
+                className={`p-3 rounded-md ${
+                  message.type === "success"
+                    ? "bg-jade-900/50 border border-jade-600"
+                    : "bg-red-900/30 border border-red-800"
+                }`}
+              >
+                <div className="flex items-start">
+                  {message.type === "success" ? (
+                    <CheckCircle2 className="h-4 w-4 text-jade-400 mr-2 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-400 mr-2 mt-0.5" />
+                  )}
+                  <p className={`text-sm ${message.type === "success" ? "text-jade-200" : "text-red-200"}`}>
+                    {message.text}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="team-status" className="text-gray-300">
+                Estado del Equipo
               </Label>
-              <Input
-                id="reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="col-span-3 bg-black/60 border-jade-800/50"
-                placeholder="Ingresa el motivo..."
-              />
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger id="team-status" className="bg-black/50 border-gray-700 focus:ring-jade-500/30">
+                  <SelectValue placeholder="Selecciona el estado" />
+                </SelectTrigger>
+                <SelectContent className="bg-black border-gray-800">
+                  <SelectItem value="pending" className="focus:bg-gray-900/50 focus:text-gray-100">
+                    Pendiente
+                  </SelectItem>
+                  <SelectItem value="approved" className="focus:bg-jade-900/50 focus:text-jade-100">
+                    Aprobado
+                  </SelectItem>
+                  <SelectItem value="rejected" className="focus:bg-red-900/50 focus:text-red-100">
+                    Rechazado
+                  </SelectItem>
+                  <SelectItem value="expelled" className="focus:bg-amber-900/50 focus:text-amber-100">
+                    Expulsado
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {(selectedStatus === "rejected" || selectedStatus === "expelled") && (
+              <div>
+                <Label htmlFor="reason" className="text-gray-300">
+                  Motivo
+                </Label>
+                <Textarea
+                  id="reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={
+                    selectedStatus === "rejected" ? "Indica el motivo del rechazo" : "Indica el motivo de la expulsión"
+                  }
+                  className="bg-black/50 border-gray-700 focus:border-jade-600 focus:ring-jade-500/30"
+                />
+              </div>
+            )}
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
           <DialogFooter>
             <Button
-              type="button"
               variant="outline"
+              className="border-gray-700 text-gray-300"
               onClick={() => setIsDialogOpen(false)}
-              className="border-jade-800/50"
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
             <Button
-              type="button"
-              onClick={handleDialogConfirm}
-              disabled={isLoading}
-              className="bg-jade-600 hover:bg-jade-700"
+              className="bg-jade-600 hover:bg-jade-500 text-white"
+              onClick={handleStatusChange}
+              disabled={isSubmitting}
             >
-              {isLoading ? "Procesando..." : "Confirmar"}
+              {isSubmitting ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -19,7 +19,7 @@ interface EditTeamDialogProps {
 
 export default function EditTeamDialog({ isOpen, onClose, team, members, tournamentId }: EditTeamDialogProps) {
   const [teamName, setTeamName] = useState(team.name)
-  const [teamPhone, setTeamPhone] = useState(team.phone || "")
+  const [teamPhone, setTeamPhone] = useState(team.phone || '')
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(members)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -61,11 +61,7 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
         teamId: team.id,
         teamName,
         teamPhone,
-        members: teamMembers.map((member) => ({
-          id: member.id,
-          name: member.name,
-          character_class: "No especificada", // Valor fijo
-        })),
+        members: teamMembers,
         tournamentId,
       })
 
@@ -77,6 +73,8 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
       if (result.success) {
         setTimeout(() => {
           onClose()
+          // Recargar la página para mostrar los cambios
+          window.location.reload()
         }, 1500)
       }
     } catch (error) {
@@ -131,14 +129,15 @@ export default function EditTeamDialog({ isOpen, onClose, team, members, tournam
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="teamPhone" className="text-gray-300">
-              <Phone className="h-4 w-4 text-jade-400 inline mr-2" />
-              Teléfono de Contacto
+            <Label htmlFor="teamPhone" className="text-gray-300 flex items-center">
+              <Phone className="h-4 w-4 mr-2" />
+              Número de Teléfono
             </Label>
             <Input
               id="teamPhone"
               value={teamPhone}
               onChange={(e) => setTeamPhone(e.target.value)}
+              placeholder="Ej: +34 123456789"
               className="bg-black/50 border-gray-700 focus:border-jade-600 focus:ring-jade-500/30"
             />
           </div>

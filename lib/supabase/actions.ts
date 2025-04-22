@@ -106,16 +106,13 @@ export async function getTournamentPrizes(tournamentId: number): Promise<Tournam
 export async function getTeamsByTournament(tournamentId: number, status?: string): Promise<Team[]> {
   try {
     const supabase = createServerComponentClient()
-
-    // Crear una consulta básica
     let query = supabase.from("teams").select("*, members:team_members(*)").eq("tournament_id", tournamentId)
 
-    // Si se proporciona un estado específico, filtrar por ese estado
+    // If a specific status is provided, filter by that status
     if (status) {
       query = query.eq("status", status)
     }
 
-    // Ordenar por fecha de creación para mantener el orden consistente
     const { data, error } = await query.order("created_at", { ascending: false })
 
     if (error) {
@@ -123,8 +120,6 @@ export async function getTeamsByTournament(tournamentId: number, status?: string
       return []
     }
 
-    // Registrar para depuración
-    console.log(`Fetched ${data?.length || 0} teams for tournament ${tournamentId}`)
     return data || []
   } catch (error) {
     console.error("Error:", error)
@@ -134,41 +129,17 @@ export async function getTeamsByTournament(tournamentId: number, status?: string
 
 export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
   try {
-    if (!teamId) {
-      console.error("Invalid team ID provided to getTeamMembers:", teamId)
-      return []
-    }
-
-    // Create the Supabase client with better error handling
     const supabase = createServerComponentClient()
-    if (!supabase) {
-      console.error("Failed to create Supabase client in getTeamMembers")
+    const { data, error } = await supabase.from("team_members").select("*").eq("team_id", teamId)
+
+    if (error) {
+      console.error(`Error fetching members for team ${teamId}:`, error)
       return []
     }
 
-    // Add detailed logging
-    console.log(`Attempting to fetch members for team ${teamId}...`)
-    console.log(`Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Not set"}`)
-    console.log(`Supabase Anon Key: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Not set"}`)
-
-    // Use a try/catch block specifically for the fetch operation
-    try {
-      const { data, error } = await supabase.from("team_members").select("*").eq("team_id", teamId)
-
-      if (error) {
-        console.error(`Error fetching members for team ${teamId}:`, error)
-        return []
-      }
-
-      console.log(`Successfully fetched ${data?.length || 0} members for team ${teamId}`)
-      return data || []
-    } catch (fetchError) {
-      console.error(`Fetch error for team ${teamId}:`, fetchError)
-      // Return an empty array instead of throwing an error
-      return []
-    }
+    return data || []
   } catch (error) {
-    console.error(`Unexpected error in getTeamMembers for team ${teamId}:`, error)
+    console.error("Error:", error)
     return []
   }
 }
@@ -176,103 +147,33 @@ export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
 // Funciones para partidos
 export async function getMatchesByTournament(tournamentId: number, phase?: string): Promise<Match[]> {
   try {
-    if (!tournamentId) {
-      console.error("Invalid tournament ID provided to getMatchesByTournament:", tournamentId)
-      return []
-    }
-
-    // Verificar si el torneo está en fase de registro
     const supabase = createServerComponentClient()
-
-    // Primero verificar si hay suficientes equipos aprobados
-    const { data: approvedTeams, error: teamsError } = await supabase
-      .from("teams")
-      .select("id")
-      .eq("tournament_id", tournamentId)
-      .eq("status", "approved")
-
-    if (teamsError) {
-      console.error(`Error checking approved teams for tournament ${tournamentId}:`, teamsError)
-      return []
-    }
-
-    // Si no hay suficientes equipos aprobados, el torneo está en fase de registro
-    if (!approvedTeams || approvedTeams.length < 2) {
-      console.log(
-        `Tournament ${tournamentId} is in registration phase with only ${approvedTeams?.length || 0} approved teams`,
+    let query = supabase
+      .from("matches")
+      .select(
+        `
+        *,
+        team1:team1_id(id, name),
+        team2:team2_id(id, name),
+        winner:winner_id(id, name)
+      `,
       )
-      return [] // Devolver array vacío sin intentar obtener partidos
+      .eq("tournament_id", tournamentId)
+
+    if (phase) {
+      query = query.eq("phase", phase)
     }
 
-    // Verificar si la tabla matches existe
-    try {
-      const { error: tableCheckError } = await supabase.from("matches").select("id").limit(1)
+    const { data, error } = await query.order("match_order", { ascending: true })
 
-      if (tableCheckError) {
-        console.error("Error checking matches table:", tableCheckError)
-        console.error("The matches table might not exist or you don't have permission to access it")
-        return []
-      }
-    } catch (tableCheckError) {
-      console.error("Error checking matches table:", tableCheckError)
+    if (error) {
+      console.error(`Error fetching matches for tournament ${tournamentId}:`, error)
       return []
     }
 
-    // Add more detailed logging
-    console.log(`Attempting to fetch matches for tournament ${tournamentId}...`)
-
-    try {
-      // Simplificar la consulta para diagnosticar problemas
-      let query = supabase.from("matches").select("*").eq("tournament_id", tournamentId)
-
-      if (phase) {
-        query = query.eq("phase", phase)
-      }
-
-      const { data, error } = await query.order("match_order", { ascending: true })
-
-      if (error) {
-        console.error(`Error fetching matches for tournament ${tournamentId}:`, error)
-        return []
-      }
-
-      // Si la consulta básica funciona, intentar la consulta completa con relaciones
-      if (data && data.length > 0) {
-        try {
-          const { data: fullData, error: fullError } = await supabase
-            .from("matches")
-            .select(`
-              *,
-              team1:team1_id(id, name),
-              team2:team2_id(id, name),
-              winner:winner_id(id, name)
-            `)
-            .eq("tournament_id", tournamentId)
-            .order("match_order", { ascending: true })
-
-          if (fullError) {
-            console.error(`Error fetching full match data for tournament ${tournamentId}:`, fullError)
-            return data // Devolver los datos básicos si la consulta completa falla
-          }
-
-          console.log(
-            `Successfully fetched ${fullData?.length || 0} matches with relations for tournament ${tournamentId}`,
-          )
-          return fullData || []
-        } catch (fullFetchError) {
-          console.error(`Error in full fetch for matches in tournament ${tournamentId}:`, fullFetchError)
-          return data // Devolver los datos básicos si la consulta completa falla
-        }
-      }
-
-      console.log(`Successfully fetched ${data?.length || 0} matches for tournament ${tournamentId}`)
-      return data || []
-    } catch (fetchError) {
-      console.error(`Fetch error for matches in tournament ${tournamentId}:`, fetchError)
-      return []
-    }
+    return data || []
   } catch (error) {
-    console.error(`Error fetching matches for tournament ${tournamentId}:`, error)
+    console.error("Error:", error)
     return []
   }
 }
@@ -335,15 +236,7 @@ export async function registerTeam(formData: FormData) {
 
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
-      .insert([
-        {
-          name: teamName,
-          phone: teamPhone,
-          tournament_id: activeTournament.id,
-          status: "pending",
-          updated_at: new Date().toISOString(), // Add updated_at field
-        },
-      ])
+      .insert([{ name: teamName, phone: teamPhone, tournament_id: activeTournament.id, status: "pending" }])
       .select()
 
     if (teamError) {
@@ -391,165 +284,6 @@ export async function registerTeam(formData: FormData) {
     return {
       success: false,
       message: "Error inesperado. Por favor, inténtalo de nuevo más tarde.",
-    }
-  }
-}
-
-// Modificar la función approveTeam para verificar el estado del torneo después de aprobar
-export async function approveTeam(teamId: number, tournamentId: number) {
-  try {
-    const supabase = createServerComponentClient()
-
-    // Actualizar el estado del equipo a "approved"
-    const { error } = await supabase
-      .from("teams")
-      .update({
-        status: "approved",
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(), // Add updated_at field
-      })
-      .eq("id", teamId)
-
-    if (error) {
-      console.error("Error al aprobar equipo:", error)
-      return {
-        success: false,
-        message: "Error al aprobar el equipo.",
-      }
-    }
-
-    // Revalidar las páginas con opciones más agresivas
-    try {
-      revalidatePath(`/torneos/${tournamentId}`, "page")
-      revalidatePath(`/admin/torneos/${tournamentId}`, "page")
-      revalidatePath(`/`, "page")
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
-
-    return {
-      success: true,
-      message: "Equipo aprobado correctamente.",
-    }
-  } catch (error) {
-    console.error("Error al aprobar equipo:", error)
-    return {
-      success: false,
-      message: "Error inesperado al aprobar el equipo.",
-    }
-  }
-}
-
-// Función para rechazar un equipo
-export async function rejectTeam(teamId: number, reason: string, tournamentId: number) {
-  try {
-    const supabase = createServerComponentClient()
-
-    // Actualizar el estado del equipo a "rejected"
-    const { error } = await supabase
-      .from("teams")
-      .update({
-        status: "rejected",
-        rejected_at: new Date().toISOString(),
-        rejection_reason: reason || "No se proporcionó motivo",
-        updated_at: new Date().toISOString(), // Add updated_at field
-      })
-      .eq("id", teamId)
-
-    if (error) {
-      console.error("Error al rechazar equipo:", error)
-      return {
-        success: false,
-        message: "Error al rechazar el equipo.",
-      }
-    }
-
-    // Revalidar las páginas con opciones más agresivas
-    try {
-      revalidatePath(`/torneos/${tournamentId}`, "page")
-      revalidatePath(`/admin/torneos/${tournamentId}`, "page")
-      revalidatePath(`/`, "page")
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
-
-    return {
-      success: true,
-      message: "Equipo rechazado correctamente.",
-    }
-  } catch (error) {
-    console.error("Error al rechazar equipo:", error)
-    return {
-      success: false,
-      message: "Error inesperado al rechazar el equipo.",
-    }
-  }
-}
-
-// Función para cambiar el estado de un equipo (para usar en TeamStatusChanger)
-export async function changeTeamStatus(teamId: number, newStatus: string, reason = "", tournamentId: number) {
-  try {
-    console.log(`Changing team ${teamId} status to ${newStatus} with reason: ${reason}`)
-
-    const supabase = createServerComponentClient()
-
-    // Preparar los datos de actualización
-    const updateData: any = {
-      status: newStatus,
-      updated_at: new Date().toISOString(),
-    }
-
-    // Añadir campos adicionales según el nuevo estado
-    if (newStatus === "approved") {
-      updateData.approved_at = new Date().toISOString()
-      updateData.rejected_at = null
-      updateData.rejection_reason = null
-    } else if (newStatus === "rejected" || newStatus === "expelled") {
-      updateData.rejected_at = new Date().toISOString()
-      updateData.rejection_reason = newStatus === "expelled" ? `[Expulsado] ${reason}` : reason
-      updateData.approved_at = null
-    } else if (newStatus === "pending") {
-      updateData.approved_at = null
-      updateData.rejected_at = null
-      updateData.rejection_reason = null
-    }
-
-    console.log("Update data:", updateData)
-
-    // Actualizar el estado del equipo
-    const { data, error } = await supabase.from("teams").update(updateData).eq("id", teamId).select()
-
-    if (error) {
-      console.error(`Error changing team ${teamId} status to ${newStatus}:`, error)
-      return {
-        success: false,
-        message: `Error al cambiar el estado del equipo a ${newStatus}.`,
-        error: error,
-      }
-    }
-
-    console.log(`Successfully changed team ${teamId} status to ${newStatus}. Response:`, data)
-
-    // Revalidar las páginas con opciones más agresivas
-    try {
-      revalidatePath(`/torneos/${tournamentId}`, "page")
-      revalidatePath(`/admin/torneos/${tournamentId}`, "page")
-      revalidatePath(`/`, "page")
-    } catch (revalidateError) {
-      console.error("Error revalidating paths:", revalidateError)
-    }
-
-    return {
-      success: true,
-      message: `Estado del equipo cambiado a ${newStatus} correctamente.`,
-      data: data,
-    }
-  } catch (error) {
-    console.error(`Error changing team ${teamId} status to ${newStatus}:`, error)
-    return {
-      success: false,
-      message: `Error inesperado al cambiar el estado del equipo a ${newStatus}.`,
-      error: error,
     }
   }
 }

@@ -96,9 +96,13 @@ export async function createTournament(data: {
     }
 
     // 4. Revalidar las rutas necesarias
-    revalidatePath("/admin")
-    revalidatePath("/")
-    revalidatePath(`/torneos/${tournamentId}`)
+    try {
+      revalidatePath("/admin")
+      revalidatePath("/")
+      revalidatePath(`/torneos/${tournamentId}`)
+    } catch (revalidateError) {
+      console.error("Error revalidating paths:", revalidateError)
+    }
 
     return {
       success: true,
@@ -221,11 +225,15 @@ export async function updateTournament(data: {
     }
 
     // 6. Revalidar las rutas necesarias
-    revalidatePath("/admin")
-    revalidatePath("/")
-    revalidatePath(`/torneos/${data.id}`)
-    revalidatePath(`/admin/torneos/${data.id}`)
-    revalidatePath(`/admin/torneos/editar/${data.id}`)
+    try {
+      revalidatePath("/admin")
+      revalidatePath("/")
+      revalidatePath(`/torneos/${data.id}`)
+      revalidatePath(`/admin/torneos/${data.id}`)
+      revalidatePath(`/admin/torneos/editar/${data.id}`)
+    } catch (revalidateError) {
+      console.error("Error revalidating paths:", revalidateError)
+    }
 
     return {
       success: true,
@@ -704,9 +712,13 @@ export async function approveTeam(teamId: number, tournamentId: number) {
     await checkAndUpdateTournamentStatus(tournamentId)
 
     // Revalidar las páginas
-    revalidatePath(`/torneos/${tournamentId}`)
-    revalidatePath(`/admin/torneos/${tournamentId}`)
-    revalidatePath("/")
+    try {
+      revalidatePath(`/torneos/${tournamentId}`)
+      revalidatePath(`/admin/torneos/${tournamentId}`)
+      revalidatePath("/")
+    } catch (revalidateError) {
+      console.error("Error revalidating paths:", revalidateError)
+    }
 
     return {
       success: true,
@@ -745,8 +757,12 @@ export async function rejectTeam(teamId: number, reason: string, tournamentId: n
     }
 
     // Revalidar las páginas
-    revalidatePath(`/torneos/${tournamentId}`)
-    revalidatePath(`/admin/torneos/${tournamentId}`)
+    try {
+      revalidatePath(`/torneos/${tournamentId}`)
+      revalidatePath(`/admin/torneos/${tournamentId}`)
+    } catch (revalidateError) {
+      console.error("Error revalidating paths:", revalidateError)
+    }
 
     return {
       success: true,
@@ -778,8 +794,12 @@ export async function deleteAllMatches(tournamentId: number) {
     }
 
     // Revalidar las páginas
-    revalidatePath(`/torneos/${tournamentId}`)
-    revalidatePath(`/admin/torneos/${tournamentId}`)
+    try {
+      revalidatePath(`/torneos/${tournamentId}`)
+      revalidatePath(`/admin/torneos/${tournamentId}`)
+    } catch (revalidateError) {
+      console.error("Error revalidating paths:", revalidateError)
+    }
 
     return {
       success: true,
@@ -947,6 +967,10 @@ export async function changeTeamStatus(data: {
   try {
     const supabase = createServerComponentClient()
 
+    if (!supabase) {
+      throw new Error("No se pudo crear el cliente de Supabase")
+    }
+
     // Preparar los datos para actualizar
     const updateData: any = {
       status: data.status,
@@ -990,15 +1014,20 @@ export async function changeTeamStatus(data: {
     }
 
     // Revalidar las rutas necesarias
-    revalidatePath(`/torneos/${data.tournamentId}`)
-    revalidatePath(`/torneos/${data.tournamentId}/equipos`)
-    revalidatePath(`/admin/torneos/${data.tournamentId}`)
+    try {
+      revalidatePath(`/torneos/${data.tournamentId}`)
+      revalidatePath(`/torneos/${data.tournamentId}/equipos`)
+      revalidatePath(`/admin/torneos/${data.tournamentId}`)
+    } catch (revalidateError) {
+      console.error("Error al revalidar rutas:", revalidateError)
+      // No abortamos la operación si falla la revalidación
+    }
 
     return {
       success: true,
       message: `Equipo ${
         data.status === "approved" ? "aprobado" : data.status === "rejected" ? "rechazado" : "expulsado"
-      } correctamente.`,
+      } correctamente.${data.status === "expelled" ? " Se eliminará automáticamente en 1 minuto." : ""}`,
     }
   } catch (error) {
     console.error("Error:", error)

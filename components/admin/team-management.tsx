@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -8,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CheckCircle2, XCircle, AlertCircle, Phone } from "lucide-react"
-import { approveTeam, rejectTeam } from "@/lib/supabase/admin-actions"
 import type { Team } from "@/lib/types"
+import { approveTeam, rejectTeam } from "@/lib/supabase/actions"
 
 interface TeamManagementProps {
   teams: Team[]
@@ -17,72 +19,13 @@ interface TeamManagementProps {
 }
 
 export default function TeamManagement({ teams, tournamentId }: TeamManagementProps) {
-  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
-  const [rejectionReason, setRejectionReason] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   // Filtrar equipos por estado
   const pendingTeams = teams.filter((team) => team.status === "pending")
   const approvedTeams = teams.filter((team) => team.status === "approved")
   const rejectedTeams = teams.filter((team) => team.status === "rejected")
-
-  const handleApproveClick = (team: Team) => {
-    setSelectedTeam(team)
-    setIsApproveDialogOpen(true)
-  }
-
-  const handleRejectClick = (team: Team) => {
-    setSelectedTeam(team)
-    setRejectionReason("")
-    setIsRejectDialogOpen(true)
-  }
-
-  const handleApproveConfirm = async () => {
-    if (!selectedTeam) return
-
-    setIsSubmitting(true)
-    setMessage(null)
-
-    const result = await approveTeam(selectedTeam.id, tournamentId)
-
-    setIsSubmitting(false)
-    setMessage({
-      type: result.success ? "success" : "error",
-      text: result.message,
-    })
-
-    if (result.success) {
-      setTimeout(() => {
-        setIsApproveDialogOpen(false)
-        setMessage(null)
-      }, 2000)
-    }
-  }
-
-  const handleRejectConfirm = async () => {
-    if (!selectedTeam) return
-
-    setIsSubmitting(true)
-    setMessage(null)
-
-    const result = await rejectTeam(selectedTeam.id, rejectionReason, tournamentId)
-
-    setIsSubmitting(false)
-    setMessage({
-      type: result.success ? "success" : "error",
-      text: result.message,
-    })
-
-    if (result.success) {
-      setTimeout(() => {
-        setIsRejectDialogOpen(false)
-        setMessage(null)
-      }, 2000)
-    }
-  }
+  const expelledTeams = teams.filter((team) => team.status === "expelled")
 
   return (
     <div className="space-y-6">
@@ -138,24 +81,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                       <Badge className="bg-yellow-600">Pendiente</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-jade-600 text-jade-400 hover:bg-jade-900/50"
-                          onClick={() => handleApproveClick(team)}
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-800 text-red-400 hover:bg-red-900/30"
-                          onClick={() => handleRejectClick(team)}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" /> Rechazar
-                        </Button>
-                      </div>
+                      <TeamActions team={team} tournamentId={tournamentId} setMessage={setMessage} />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -249,6 +175,135 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
         </div>
       )}
 
+      {/* Equipos expulsados */}
+      {expelledTeams.length > 0 && (
+        <div>
+          <h3 className="text-lg font-medium text-jade-400 mb-3">Equipos Expulsados ({expelledTeams.length})</h3>
+          <div className="overflow-x-auto">
+            <Table className="border border-jade-800/30">
+              <TableHeader className="bg-black/50">
+                <TableRow>
+                  <TableHead className="text-jade-300">ID</TableHead>
+                  <TableHead className="text-jade-300">Nombre</TableHead>
+                  <TableHead className="text-jade-300">Teléfono</TableHead>
+                  <TableHead className="text-jade-300">Fecha de registro</TableHead>
+                  <TableHead className="text-jade-300">Fecha de expulsión</TableHead>
+                  <TableHead className="text-jade-300">Motivo</TableHead>
+                  <TableHead className="text-jade-300">Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expelledTeams.map((team) => (
+                  <TableRow key={team.id} className="border-b border-jade-800/20">
+                    <TableCell>{team.id}</TableCell>
+                    <TableCell className="font-medium">{team.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Phone className="h-3 w-3 text-jade-400 mr-1" />
+                        {team.phone || "No disponible"}
+                      </div>
+                    </TableCell>
+                    <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{team.rejected_at ? new Date(team.rejected_at).toLocaleDateString() : "N/A"}</TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {team.rejection_reason ? team.rejection_reason.replace("[Expulsado] ", "") : "No especificado"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-amber-600">Expulsado</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface TeamActionsProps {
+  team: Team
+  tournamentId: number
+  setMessage: React.Dispatch<React.SetStateAction<{ type: "success" | "error"; text: string } | null>>
+}
+
+const TeamActions = ({ team, tournamentId, setMessage }: TeamActionsProps) => {
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleApproveClick = () => {
+    setIsApproveDialogOpen(true)
+  }
+
+  const handleRejectClick = () => {
+    setRejectionReason("")
+    setIsRejectDialogOpen(true)
+  }
+
+  const handleApproveConfirm = async () => {
+    setIsSubmitting(true)
+    setMessage(null)
+
+    const result = await approveTeam(team.id, tournamentId)
+
+    setIsSubmitting(false)
+    setMessage({
+      type: result.success ? "success" : "error",
+      text: result.message,
+    })
+
+    if (result.success) {
+      setTimeout(() => {
+        setIsApproveDialogOpen(false)
+        setMessage(null)
+      }, 2000)
+    }
+  }
+
+  const handleRejectConfirm = async () => {
+    setIsSubmitting(true)
+    setMessage(null)
+
+    const result = await rejectTeam(team.id, rejectionReason, tournamentId)
+
+    setIsSubmitting(false)
+    setMessage({
+      type: result.success ? "success" : "error",
+      text: result.message,
+    })
+
+    if (result.success) {
+      setTimeout(() => {
+        setIsRejectDialogOpen(false)
+        setMessage(null)
+      }, 2000)
+    }
+  }
+
+  return (
+    <>
+      <div className="flex space-x-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-jade-600 text-jade-400 hover:bg-jade-900/50"
+          onClick={handleApproveClick}
+        >
+          <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-red-800 text-red-400 hover:bg-red-900/30"
+          onClick={handleRejectClick}
+        >
+          <XCircle className="h-4 w-4 mr-1" /> Rechazar
+        </Button>
+      </div>
+
       {/* Diálogo de confirmación para aprobar equipo */}
       <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
         <DialogContent className="bg-black/90 border-jade-800/30">
@@ -257,7 +312,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-300">
-              ¿Estás seguro de que deseas aprobar el equipo <span className="font-bold">{selectedTeam?.name}</span>?
+              ¿Estás seguro de que deseas aprobar el equipo <span className="font-bold">{team?.name}</span>?
             </p>
             <p className="text-gray-400 text-sm mt-2">
               Al aprobar el equipo, podrá participar en el torneo y aparecerá en el bracket.
@@ -291,7 +346,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
           </DialogHeader>
           <div className="py-4 space-y-4">
             <p className="text-gray-300">
-              ¿Estás seguro de que deseas rechazar el equipo <span className="font-bold">{selectedTeam?.name}</span>?
+              ¿Estás seguro de que deseas rechazar el equipo <span className="font-bold">{team?.name}</span>?
             </p>
             <div className="space-y-2">
               <Label htmlFor="rejectionReason" className="text-gray-300">
@@ -325,6 +380,6 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

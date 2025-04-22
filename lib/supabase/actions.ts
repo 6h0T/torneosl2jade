@@ -287,3 +287,83 @@ export async function registerTeam(formData: FormData) {
     }
   }
 }
+
+// Modificar la función approveTeam para verificar el estado del torneo después de aprobar
+export async function approveTeam(teamId: number, tournamentId: number) {
+  try {
+    const supabase = createServerComponentClient()
+
+    // Actualizar el estado del equipo a "approved"
+    const { error } = await supabase
+      .from("teams")
+      .update({
+        status: "approved",
+        approved_at: new Date().toISOString(),
+      })
+      .eq("id", teamId)
+
+    if (error) {
+      console.error("Error al aprobar equipo:", error)
+      return {
+        success: false,
+        message: "Error al aprobar el equipo.",
+      }
+    }
+
+    // Revalidar las páginas
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
+    revalidatePath("/")
+
+    return {
+      success: true,
+      message: "Equipo aprobado correctamente.",
+    }
+  } catch (error) {
+    console.error("Error al aprobar equipo:", error)
+    return {
+      success: false,
+      message: "Error inesperado al aprobar el equipo.",
+    }
+  }
+}
+
+// Función para rechazar un equipo
+export async function rejectTeam(teamId: number, reason: string, tournamentId: number) {
+  try {
+    const supabase = createServerComponentClient()
+
+    // Actualizar el estado del equipo a "rejected"
+    const { error } = await supabase
+      .from("teams")
+      .update({
+        status: "rejected",
+        rejected_at: new Date().toISOString(),
+        rejection_reason: reason || "No se proporcionó motivo",
+      })
+      .eq("id", teamId)
+
+    if (error) {
+      console.error("Error al rechazar equipo:", error)
+      return {
+        success: false,
+        message: "Error al rechazar el equipo.",
+      }
+    }
+
+    // Revalidar las páginas
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
+
+    return {
+      success: true,
+      message: "Equipo rechazado correctamente.",
+    }
+  } catch (error) {
+    console.error("Error al rechazar equipo:", error)
+    return {
+      success: false,
+      message: "Error inesperado al rechazar el equipo.",
+    }
+  }
+}

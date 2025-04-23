@@ -3,7 +3,8 @@
 import { generateInitialBracket, deleteAllMatches } from "@/lib/supabase/admin-actions"
 import { revalidatePath } from "next/cache"
 
-export async function generateBracketAction(tournamentId: number) {
+export async function generateBracketAction(formData: FormData) {
+  const tournamentId = Number(formData.get("tournamentId"))
   const result = await generateInitialBracket(tournamentId)
   
   if (result.success) {
@@ -14,7 +15,8 @@ export async function generateBracketAction(tournamentId: number) {
   return result
 }
 
-export async function deleteMatchesAction(tournamentId: number) {
+export async function deleteMatchesAction(formData: FormData) {
+  const tournamentId = Number(formData.get("tournamentId"))
   const result = await deleteAllMatches(tournamentId)
   
   if (result.success) {

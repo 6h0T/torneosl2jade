@@ -59,6 +59,8 @@ export interface Match {
   id: number
   tournament_id: number
   phase: "roundOf16" | "quarterFinals" | "semiFinals" | "final"
+  phase_type: "swiss" | "elimination"
+  swiss_round?: number
   match_order: number
   team1_id?: number
   team2_id?: number

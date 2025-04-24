@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertCircle, CheckCircle2, Trophy } from "lucide-react"
 import { generateInitialBracket, updateMatchResult, deleteAllMatches } from "@/lib/supabase/admin-actions"
 import type { Match } from "@/lib/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface BracketManagementProps {
   matches: Match[]
@@ -25,6 +27,8 @@ export default function BracketManagement({ matches, tournamentId }: BracketMana
   const [team2Score, setTeam2Score] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [phaseType, setPhaseType] = useState<'swiss' | 'elimination'>('swiss')
+  const [round, setRound] = useState<string>('1')
 
   // Agrupar partidos por fase
   const roundOf16Matches = matches
@@ -57,7 +61,7 @@ export default function BracketManagement({ matches, tournamentId }: BracketMana
     setIsSubmitting(true)
     setMessage(null)
 
-    const result = await generateInitialBracket(tournamentId)
+    const result = await generateInitialBracket(tournamentId, phaseType, round)
 
     setIsSubmitting(false)
     setMessage({
@@ -153,79 +157,245 @@ export default function BracketManagement({ matches, tournamentId }: BracketMana
         </div>
       )}
 
-      {/* Acciones */}
-      <div className="flex flex-wrap gap-4">
-        <Button
-          className="bg-jade-600 hover:bg-jade-500 text-white"
-          onClick={handleGenerateClick}
-          disabled={matches.length > 0}
-        >
-          Generar Bracket Inicial
-        </Button>
-        {matches.length > 0 && (
-          <Button className="bg-red-800 hover:bg-red-700 text-white" onClick={handleDeleteClick}>
-            Eliminar Todos los Partidos
-          </Button>
-        )}
-      </div>
-
-      {/* Información sobre el bracket */}
-      {matches.length === 0 ? (
-        <div className="bg-black/50 border border-jade-800/30 rounded-md p-6 text-center">
-          <p className="text-gray-300 mb-4">No hay partidos generados para este torneo.</p>
-          <p className="text-gray-400 text-sm">
-            Haz clic en &quot;Generar Bracket Inicial&quot; para crear automáticamente los partidos basados en los
-            equipos aprobados.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {/* Octavos de Final */}
-          {roundOf16Matches.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium text-jade-400 mb-3">Octavos de Final</h3>
-              <MatchesTable matches={roundOf16Matches} onUpdateClick={handleUpdateClick} />
+      {/* Selectores de fase y ronda para generar bracket */}
+      <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
+        <CardHeader>
+          <CardTitle className="text-lg text-jade-400">Generar Bracket</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phaseType" className="text-gray-300">
+                Tipo de Fase
+              </Label>
+              <Select 
+                value={phaseType} 
+                onValueChange={(value: 'swiss' | 'elimination') => {
+                  setPhaseType(value)
+                  setRound(value === 'swiss' ? '1' : 'roundOf16')
+                }}
+              >
+                <SelectTrigger className="bg-black/50 border-gray-700">
+                  <SelectValue placeholder="Selecciona el tipo de fase" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/90 border-gray-700">
+                  <SelectItem value="swiss">Fase Suiza</SelectItem>
+                  <SelectItem value="elimination">Fase Eliminación</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
 
-          {/* Cuartos de Final */}
-          {quarterFinalMatches.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium text-jade-400 mb-3">Cuartos de Final</h3>
-              <MatchesTable matches={quarterFinalMatches} onUpdateClick={handleUpdateClick} />
+            <div className="space-y-2">
+              <Label htmlFor="round" className="text-gray-300">
+                Ronda
+              </Label>
+              <Select value={round} onValueChange={setRound}>
+                <SelectTrigger className="bg-black/50 border-gray-700">
+                  <SelectValue placeholder="Selecciona la ronda" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/90 border-gray-700">
+                  {phaseType === 'swiss' ? (
+                    <>
+                      <SelectItem value="1">Ronda 1</SelectItem>
+                      <SelectItem value="2">Ronda 2</SelectItem>
+                      <SelectItem value="3">Ronda 3</SelectItem>
+                      <SelectItem value="4">Ronda 4</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="roundOf16">Octavos de Final</SelectItem>
+                      <SelectItem value="quarterFinals">Cuartos de Final</SelectItem>
+                      <SelectItem value="semiFinals">Semifinal</SelectItem>
+                      <SelectItem value="final">Final</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+          </div>
 
-          {/* Semifinales */}
-          {semiFinalMatches.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium text-jade-400 mb-3">Semifinales</h3>
-              <MatchesTable matches={semiFinalMatches} onUpdateClick={handleUpdateClick} />
-            </div>
-          )}
+          <form action={generateBracketAction}>
+            <input type="hidden" name="tournamentId" value={tournamentId} />
+            <input type="hidden" name="phaseType" value={phaseType} />
+            <input type="hidden" name="round" value={round} />
+            <Button
+              type="submit"
+              className="w-full bg-jade-600 hover:bg-jade-500 text-white mt-4"
+              disabled={matches.length > 0}
+            >
+              Generar Bracket para {phaseType === 'swiss' ? `Ronda ${round}` : getPhaseTitle(round)}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-          {/* Final */}
-          {finalMatches.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium text-jade-400 mb-3">Final</h3>
-              <MatchesTable matches={finalMatches} onUpdateClick={handleUpdateClick} />
+      {/* Eliminar partidos */}
+      {matches.length > 0 && (
+        <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
+          <CardHeader>
+            <CardTitle className="text-lg text-red-400">Eliminar Partidos</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-300 mb-4">
+              Elimina todos los partidos del torneo. Esto te permitirá regenerar el bracket desde cero.
+            </p>
+            <Button 
+              className="w-full bg-red-800 hover:bg-red-700 text-white" 
+              onClick={handleDeleteClick}
+            >
+              Eliminar Todos los Partidos
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Vista de partidos actuales */}
+      {matches.length > 0 && (
+        <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
+          <CardHeader>
+            <CardTitle className="text-lg text-jade-400">Partidos Actuales</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-6">
+            {/* Selector de fase y ronda para ver partidos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-gray-300">Ver Fase</Label>
+                <Select 
+                  value={phaseType} 
+                  onValueChange={(value: 'swiss' | 'elimination') => {
+                    setPhaseType(value)
+                    setRound(value === 'swiss' ? '1' : 'roundOf16')
+                  }}
+                >
+                  <SelectTrigger className="bg-black/50 border-gray-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/90 border-gray-700">
+                    <SelectItem value="swiss">Fase Suiza</SelectItem>
+                    <SelectItem value="elimination">Fase Eliminación</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-300">Ver Ronda</Label>
+                <Select value={round} onValueChange={setRound}>
+                  <SelectTrigger className="bg-black/50 border-gray-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/90 border-gray-700">
+                    {phaseType === 'swiss' ? (
+                      <>
+                        <SelectItem value="1">Ronda 1</SelectItem>
+                        <SelectItem value="2">Ronda 2</SelectItem>
+                        <SelectItem value="3">Ronda 3</SelectItem>
+                        <SelectItem value="4">Ronda 4</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="roundOf16">Octavos de Final</SelectItem>
+                        <SelectItem value="quarterFinals">Cuartos de Final</SelectItem>
+                        <SelectItem value="semiFinals">Semifinal</SelectItem>
+                        <SelectItem value="final">Final</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-        </div>
+
+            {/* Lista de partidos de la fase/ronda seleccionada */}
+            <div className="space-y-4">
+              {matches
+                .filter(m => 
+                  phaseType === 'swiss' 
+                    ? m.phase_type === 'swiss' && m.swiss_round === parseInt(round)
+                    : m.phase === round
+                )
+                .map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    onUpdateClick={handleUpdateClick}
+                  />
+                ))
+              }
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Diálogo para generar bracket */}
       <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
         <DialogContent className="bg-black/90 border-jade-800/30">
           <DialogHeader>
-            <DialogTitle className="text-jade-400">Generar Bracket Inicial</DialogTitle>
+            <DialogTitle className="text-jade-400">Generar Bracket</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-gray-300">¿Estás seguro de que deseas generar el bracket inicial para este torneo?</p>
-            <p className="text-gray-400 text-sm mt-2">
-              Esta acción creará automáticamente los partidos basados en los equipos aprobados. Asegúrate de haber
-              aprobado todos los equipos que deseas incluir en el torneo.
-            </p>
+          <div className="py-4 space-y-4">
+            <form action={generateBracketAction}>
+              <input type="hidden" name="tournamentId" value={tournamentId} />
+              <input type="hidden" name="phaseType" value={phaseType} />
+              <input type="hidden" name="round" value={round} />
+              <div className="space-y-4">
+                {/* Selector de tipo de fase */}
+                <div className="space-y-2">
+                  <Label htmlFor="phaseType" className="text-gray-300">
+                    Tipo de Fase
+                  </Label>
+                  <Select 
+                    value={phaseType} 
+                    onValueChange={(value: 'swiss' | 'elimination') => {
+                      setPhaseType(value)
+                      setRound(value === 'swiss' ? '1' : 'roundOf16')
+                    }}
+                  >
+                    <SelectTrigger className="bg-black/50 border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/90 border-gray-700">
+                      <SelectItem value="swiss">Fase Suiza</SelectItem>
+                      <SelectItem value="elimination">Fase Eliminación</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Selector de ronda */}
+                <div className="space-y-2">
+                  <Label htmlFor="round" className="text-gray-300">
+                    Ronda
+                  </Label>
+                  <Select value={round} onValueChange={setRound}>
+                    <SelectTrigger className="bg-black/50 border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/90 border-gray-700">
+                      {phaseType === 'swiss' ? (
+                        <>
+                          <SelectItem value="1">Ronda 1</SelectItem>
+                          <SelectItem value="2">Ronda 2</SelectItem>
+                          <SelectItem value="3">Ronda 3</SelectItem>
+                          <SelectItem value="4">Ronda 4</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="roundOf16">Octavos de Final</SelectItem>
+                          <SelectItem value="quarterFinals">Cuartos de Final</SelectItem>
+                          <SelectItem value="semiFinals">Semifinal</SelectItem>
+                          <SelectItem value="final">Final</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-jade-600 hover:bg-jade-500 text-white mt-4"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Procesando..." : "Generar Bracket"}
+              </Button>
+            </form>
           </div>
           <DialogFooter>
             <Button
@@ -235,13 +405,6 @@ export default function BracketManagement({ matches, tournamentId }: BracketMana
               disabled={isSubmitting}
             >
               Cancelar
-            </Button>
-            <Button
-              className="bg-jade-600 hover:bg-jade-500 text-white"
-              onClick={handleGenerateConfirm}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Procesando..." : "Confirmar"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -427,6 +590,34 @@ function MatchesTable({ matches, onUpdateClick }: MatchesTableProps) {
           ))}
         </TableBody>
       </Table>
+    </div>
+  )
+}
+
+// Componente MatchCard para mostrar cada partido
+function MatchCard({ match, onUpdateClick }: { match: Match; onUpdateClick: (match: Match) => void }) {
+  return (
+    <div className="p-4 border border-jade-800/30 rounded-lg bg-black/50">
+      <div className="flex justify-between items-center">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{match.team1?.name || "Por determinar"}</span>
+            <span className="text-xl text-jade-400">vs</span>
+            <span className="text-sm font-medium">{match.team2?.name || "Por determinar"}</span>
+          </div>
+          <div className="text-xs text-gray-400">
+            {match.match_date ? new Date(match.match_date).toLocaleDateString() : "Fecha por definir"}
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-jade-600 text-jade-400"
+          onClick={() => onUpdateClick(match)}
+        >
+          Actualizar
+        </Button>
+      </div>
     </div>
   )
 }

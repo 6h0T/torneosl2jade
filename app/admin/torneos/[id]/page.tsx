@@ -18,6 +18,7 @@ import TeamStatusChanger from "@/components/admin/team-status-changer"
 import type { Match as MatchType, Team as TeamType, TeamMember as TeamMemberType } from "@/lib/types"
 import RefreshButton from "@/components/refresh-button"
 import AuthCheck from "@/components/admin/auth-check"
+import BracketActions from "@/components/admin/bracket-actions"
 
 import { generateBracketAction, deleteMatchesAction } from "./actions"
 
@@ -275,52 +276,14 @@ export default async function AdminTournamentPage({
 
           <TabsContent value="partidos" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Acciones de bracket */}
-              <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
-                <CardHeader>
-                  <CardTitle className="text-lg text-jade-400">Acciones de Bracket</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-300 mb-2">
-                      Genera el bracket inicial con los equipos aprobados. Esto creará automáticamente los partidos según
-                      el número de equipos.
-                    </p>
-                    <form action={generateBracketAction}>
-                      <input type="hidden" name="tournamentId" value={tournamentId} />
-                      <Button
-                        type="submit"
-                        className="w-full bg-jade-600 hover:bg-jade-700 text-white"
-                        disabled={approvedTeams.length < 2}
-                      >
-                        Generar Bracket
-                      </Button>
-                    </form>
-                    {approvedTeams.length < 2 && (
-                      <p className="text-amber-400 text-xs mt-2">
-                        Se necesitan al menos 2 equipos aprobados para generar el bracket.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="pt-4 border-t border-jade-800/30">
-                    <p className="text-sm text-gray-300 mb-2">
-                      Elimina todos los partidos del torneo. Esto te permitirá regenerar el bracket desde cero.
-                    </p>
-                    <form action={deleteMatchesAction}>
-                      <input type="hidden" name="tournamentId" value={tournamentId} />
-                      <Button type="submit" variant="destructive" className="w-full" disabled={matches.length === 0}>
-                        Eliminar Todos los Partidos
-                      </Button>
-                    </form>
-                    {matches.length === 0 && (
-                      <p className="text-gray-400 text-xs mt-2">
-                        No hay partidos para eliminar. Genera el bracket primero.
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Usar el nuevo componente cliente */}
+              <BracketActions 
+                tournamentId={tournamentId}
+                approvedTeamsCount={approvedTeams.length}
+                matchesCount={matches.length}
+                generateBracketAction={generateBracketAction}
+                deleteMatchesAction={deleteMatchesAction}
+              />
 
               {/* Partidos pendientes */}
               <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">

@@ -6,18 +6,24 @@ import { Trophy, Clock, Users, Shield } from "lucide-react"
 import { BracketConnector } from "@/components/ui/bracket-connector"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useLanguage } from "@/contexts/language-context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import type { Match } from "@/lib/types"
 
 export default function TournamentBracket({ tournamentId }: { tournamentId: number }) {
   const [hoveredMatch, setHoveredMatch] = useState<string | null>(null)
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null)
   const bracketRef = useRef<HTMLDivElement>(null)
+  const [phaseType, setPhaseType] = useState<'swiss' | 'elimination'>('swiss')
+  const [round, setRound] = useState<string>('1')
   const [matches, setMatches] = useState<{
+    swiss: Match[]
     roundOf16: Match[]
     quarterFinals: Match[]
     semiFinals: Match[]
     final: Match[]
   }>({
+    swiss: [],
     roundOf16: [],
     quarterFinals: [],
     semiFinals: [],
@@ -52,20 +58,22 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
 
         if (data && data.length > 0) {
           // Organizar los partidos por fase
+          const swiss = data.filter((match) => match.phase_type === "swiss")
           const roundOf16 = data.filter((match) => match.phase === "roundOf16")
           const quarterFinals = data.filter((match) => match.phase === "quarterFinals")
           const semiFinals = data.filter((match) => match.phase === "semiFinals")
           const final = data.filter((match) => match.phase === "final")
 
           setMatches({
+            swiss,
             roundOf16,
             quarterFinals,
             semiFinals,
             final,
           })
         } else {
-          // Si no hay partidos, mostrar mensaje
           setMatches({
+            swiss: [],
             roundOf16: [],
             quarterFinals: [],
             semiFinals: [],
@@ -106,6 +114,11 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
     }
   }, [tournamentId])
 
+  // Filtrar partidos según la fase y ronda seleccionada
+  const currentMatches = phaseType === 'swiss' 
+    ? matches.swiss.filter(m => m.swiss_round === parseInt(round))
+    : matches[round as keyof typeof matches] || []
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -119,6 +132,7 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
 
   // Si no hay partidos, mostrar mensaje
   if (
+    matches.swiss.length === 0 &&
     matches.roundOf16.length === 0 &&
     matches.quarterFinals.length === 0 &&
     matches.semiFinals.length === 0 &&
@@ -135,41 +149,202 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
   }
 
   return (
-    <div className="w-full">
-      <div className="md:hidden mb-4 p-3 bg-black/80 backdrop-blur-sm border border-jade-800/30 rounded-lg text-sm text-jade-300">
-        <p>{t("bracketMobileInstructions")}</p>
-      </div>
-      <div className="relative">
-        {/* Panel de información del partido seleccionado */}
-        {selectedMatch && (
-          <MatchInfoPanel
-            match={
-              matches.roundOf16.find((m) => m.id.toString() === selectedMatch) ||
-              matches.quarterFinals.find((m) => m.id.toString() === selectedMatch) ||
-              matches.semiFinals.find((m) => m.id.toString() === selectedMatch) ||
-              matches.final.find((m) => m.id.toString() === selectedMatch)
-            }
-            onClose={() => setSelectedMatch(null)}
-          />
-        )}
+    <div className="w-full space-y-4">
+      {/* Selectores de fase y ronda */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="space-y-2">
+          <Label className="text-gray-300">Tipo de Fase</Label>
+          <Select value={phaseType} onValueChange={(value: 'swiss' | 'elimination') => {
+            setPhaseType(value)
+            setRound(value === 'swiss' ? '1' : 'roundOf16')
+          }}>
+            <SelectTrigger className="bg-black/50 border-gray-700">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-black/90 border-gray-700">
+              <SelectItem value="swiss">Fase Suiza</SelectItem>
+              <SelectItem value="elimination">Fase Eliminación</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Bracket principal */}
-        <div className="overflow-x-auto pb-4 hide-scrollbar">
-          <div className="min-w-[900px] w-full p-2" ref={bracketRef}>
-            <div className="flex justify-between relative">
-              {/* Octavos de Final */}
-              {matches.roundOf16.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-gray-300">Ronda</Label>
+          <Select value={round} onValueChange={setRound}>
+            <SelectTrigger className="bg-black/50 border-gray-700">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-black/90 border-gray-700">
+              {phaseType === 'swiss' ? (
                 <>
+                  <SelectItem value="1">Ronda 1</SelectItem>
+                  <SelectItem value="2">Ronda 2</SelectItem>
+                  <SelectItem value="3">Ronda 3</SelectItem>
+                  <SelectItem value="4">Ronda 4</SelectItem>
+                </>
+              ) : (
+                <>
+                  <SelectItem value="roundOf16">Octavos de Final</SelectItem>
+                  <SelectItem value="quarterFinals">Cuartos de Final</SelectItem>
+                  <SelectItem value="semiFinals">Semifinal</SelectItem>
+                  <SelectItem value="final">Final</SelectItem>
+                </>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Vista de partidos */}
+      <div className="overflow-x-auto pb-4 hide-scrollbar">
+        <div className="min-w-[900px] w-full p-2" ref={bracketRef}>
+          <div className="flex justify-between relative">
+            {phaseType === 'swiss' ? (
+              // Vista de fase suiza
+              <div className="w-full flex flex-col gap-4">
+                {currentMatches.map((match) => (
+                  <div key={match.id} className="w-[400px]">
+                    <MatchCard
+                      match={match}
+                      isHovered={hoveredMatch === match.id.toString()}
+                      isSelected={selectedMatch === match.id.toString()}
+                      onHover={setHoveredMatch}
+                      onClick={setSelectedMatch}
+                      isCompleted={match.status === "completed"}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Vista de fase eliminación (código existente)
+              <>
+                {/* Octavos de Final */}
+                {matches.roundOf16.length > 0 && (
+                  <>
+                    <div className="w-[170px] z-10 flex flex-col">
+                      <h3
+                        className={`text-sm font-medium mb-3 ${
+                          matches.roundOf16.every((m) => m.status === "completed") ? "text-gray-500" : "text-forest-400"
+                        }`}
+                      >
+                        {t("roundOf16")}
+                      </h3>
+                      <div className="space-y-3 flex-grow">
+                        {matches.roundOf16.map((match) => (
+                          <MatchCard
+                            key={match.id}
+                            match={match}
+                            isHovered={hoveredMatch === match.id.toString()}
+                            isSelected={selectedMatch === match.id.toString()}
+                            onHover={setHoveredMatch}
+                            onClick={setSelectedMatch}
+                            isCompleted={match.status === "completed"}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Líneas de conexión para octavos a cuartos */}
+                    <div className="w-[60px] relative z-0">
+                      <div className="absolute inset-0">
+                        <BracketConnector
+                          inputs={matches.roundOf16.map((m) => m.id.toString())}
+                          outputs={matches.quarterFinals.map((m) => m.id.toString())}
+                          isCompleted={matches.roundOf16.every((m) => m.status === "completed")}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Cuartos de Final */}
+                {matches.quarterFinals.length > 0 && (
+                  <>
+                    <div className="w-[170px] z-10 flex flex-col">
+                      <h3
+                        className={`text-sm font-medium mb-3 ${
+                          matches.quarterFinals.every((m) => m.status === "completed")
+                            ? "text-gray-500"
+                            : "text-forest-400"
+                        }`}
+                      >
+                        {t("quarterFinals")}
+                      </h3>
+                      <div className="flex-grow flex flex-col justify-around">
+                        {matches.quarterFinals.map((match) => (
+                          <div key={match.id} className="py-2">
+                            <MatchCard
+                              match={match}
+                              isHovered={hoveredMatch === match.id.toString()}
+                              isSelected={selectedMatch === match.id.toString()}
+                              onHover={setHoveredMatch}
+                              onClick={setSelectedMatch}
+                              isCompleted={match.status === "completed"}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Líneas de conexión para cuartos a semifinales */}
+                    <div className="w-[60px] relative z-0">
+                      <div className="absolute inset-0">
+                        <BracketConnector
+                          inputs={matches.quarterFinals.map((m) => m.id.toString())}
+                          outputs={matches.semiFinals.map((m) => m.id.toString())}
+                          isCompleted={matches.quarterFinals.every((m) => m.status === "completed")}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Semifinales */}
+                {matches.semiFinals.length > 0 && (
+                  <>
+                    <div className="w-[170px] z-10 flex flex-col">
+                      <h3
+                        className={`text-sm font-medium mb-3 ${
+                          matches.semiFinals.every((m) => m.status === "completed") ? "text-gray-500" : "text-forest-400"
+                        }`}
+                      >
+                        {t("semiFinals")}
+                      </h3>
+                      <div className="flex-grow flex flex-col justify-around">
+                        {matches.semiFinals.map((match) => (
+                          <div key={match.id} className="py-2">
+                            <MatchCard
+                              match={match}
+                              isHovered={hoveredMatch === match.id.toString()}
+                              isSelected={selectedMatch === match.id.toString()}
+                              onHover={setHoveredMatch}
+                              onClick={setSelectedMatch}
+                              isCompleted={match.status === "completed"}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Líneas de conexión para semifinales a final */}
+                    <div className="w-[60px] relative z-0">
+                      <div className="absolute inset-0">
+                        <BracketConnector
+                          inputs={matches.semiFinals.map((m) => m.id.toString())}
+                          outputs={matches.final.map((m) => m.id.toString())}
+                          isCompleted={matches.semiFinals.every((m) => m.status === "completed")}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Final */}
+                {matches.final.length > 0 && (
                   <div className="w-[170px] z-10 flex flex-col">
-                    <h3
-                      className={`text-sm font-medium mb-3 ${
-                        matches.roundOf16.every((m) => m.status === "completed") ? "text-gray-500" : "text-forest-400"
-                      }`}
-                    >
-                      {t("roundOf16")}
-                    </h3>
-                    <div className="space-y-3 flex-grow">
-                      {matches.roundOf16.map((match) => (
+                    <h3 className="text-sm font-medium mb-3 text-forest-400">{t("final")}</h3>
+                    <div className="flex-grow flex items-center justify-center">
+                      {matches.final.map((match) => (
                         <MatchCard
                           key={match.id}
                           match={match}
@@ -178,130 +353,25 @@ export default function TournamentBracket({ tournamentId }: { tournamentId: numb
                           onHover={setHoveredMatch}
                           onClick={setSelectedMatch}
                           isCompleted={match.status === "completed"}
+                          isFinal={true}
                         />
                       ))}
                     </div>
                   </div>
-
-                  {/* Líneas de conexión para octavos a cuartos */}
-                  <div className="w-[60px] relative z-0">
-                    <div className="absolute inset-0">
-                      <BracketConnector
-                        inputs={matches.roundOf16.map((m) => m.id.toString())}
-                        outputs={matches.quarterFinals.map((m) => m.id.toString())}
-                        isCompleted={matches.roundOf16.every((m) => m.status === "completed")}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Cuartos de Final */}
-              {matches.quarterFinals.length > 0 && (
-                <>
-                  <div className="w-[170px] z-10 flex flex-col">
-                    <h3
-                      className={`text-sm font-medium mb-3 ${
-                        matches.quarterFinals.every((m) => m.status === "completed")
-                          ? "text-gray-500"
-                          : "text-forest-400"
-                      }`}
-                    >
-                      {t("quarterFinals")}
-                    </h3>
-                    <div className="flex-grow flex flex-col justify-around">
-                      {matches.quarterFinals.map((match) => (
-                        <div key={match.id} className="py-2">
-                          <MatchCard
-                            match={match}
-                            isHovered={hoveredMatch === match.id.toString()}
-                            isSelected={selectedMatch === match.id.toString()}
-                            onHover={setHoveredMatch}
-                            onClick={setSelectedMatch}
-                            isCompleted={match.status === "completed"}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Líneas de conexión para cuartos a semifinales */}
-                  <div className="w-[60px] relative z-0">
-                    <div className="absolute inset-0">
-                      <BracketConnector
-                        inputs={matches.quarterFinals.map((m) => m.id.toString())}
-                        outputs={matches.semiFinals.map((m) => m.id.toString())}
-                        isCompleted={matches.quarterFinals.every((m) => m.status === "completed")}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Semifinales */}
-              {matches.semiFinals.length > 0 && (
-                <>
-                  <div className="w-[170px] z-10 flex flex-col">
-                    <h3
-                      className={`text-sm font-medium mb-3 ${
-                        matches.semiFinals.every((m) => m.status === "completed") ? "text-gray-500" : "text-forest-400"
-                      }`}
-                    >
-                      {t("semiFinals")}
-                    </h3>
-                    <div className="flex-grow flex flex-col justify-around">
-                      {matches.semiFinals.map((match) => (
-                        <div key={match.id} className="py-2">
-                          <MatchCard
-                            match={match}
-                            isHovered={hoveredMatch === match.id.toString()}
-                            isSelected={selectedMatch === match.id.toString()}
-                            onHover={setHoveredMatch}
-                            onClick={setSelectedMatch}
-                            isCompleted={match.status === "completed"}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Líneas de conexión para semifinales a final */}
-                  <div className="w-[60px] relative z-0">
-                    <div className="absolute inset-0">
-                      <BracketConnector
-                        inputs={matches.semiFinals.map((m) => m.id.toString())}
-                        outputs={matches.final.map((m) => m.id.toString())}
-                        isCompleted={matches.semiFinals.every((m) => m.status === "completed")}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Final */}
-              {matches.final.length > 0 && (
-                <div className="w-[170px] z-10 flex flex-col">
-                  <h3 className="text-sm font-medium mb-3 text-forest-400">{t("final")}</h3>
-                  <div className="flex-grow flex items-center justify-center">
-                    {matches.final.map((match) => (
-                      <MatchCard
-                        key={match.id}
-                        match={match}
-                        isHovered={hoveredMatch === match.id.toString()}
-                        isSelected={selectedMatch === match.id.toString()}
-                        onHover={setHoveredMatch}
-                        onClick={setSelectedMatch}
-                        isCompleted={match.status === "completed"}
-                        isFinal={true}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Panel de información del partido seleccionado */}
+      {selectedMatch && (
+        <MatchInfoPanel
+          match={currentMatches.find((m) => m.id.toString() === selectedMatch)}
+          onClose={() => setSelectedMatch(null)}
+        />
+      )}
     </div>
   )
 }
@@ -331,7 +401,7 @@ function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick
   return (
     <div
       id={match.id.toString()}
-      className={`relative border rounded-md cursor-pointer transition-all duration-300
+      className={`relative border rounded-md p-2 transition-all duration-300 
                 ${isHovered || isSelected ? "border-jade-400 shadow-[0_0_10px_rgba(0,255,170,0.3)]" : isCompleted ? "border-gray-700" : "border-jade-800/30"}
                 ${isFinal ? "bg-black/90" : isCompleted ? "bg-black/80" : "bg-black/80"}
                 ${isSelected ? "scale-105 z-10" : ""}`}
@@ -339,28 +409,20 @@ function MatchCard({ match, isHovered, isSelected, isCompleted, onHover, onClick
       onMouseLeave={() => onHover(null)}
       onClick={() => onClick(match.id.toString())}
     >
-      <div className="p-2 space-y-1">
+      <div className="space-y-1">
         <div className="flex justify-between items-center">
-          <div
-            className={`font-medium text-sm ${team1Won ? "text-forest-400" : isCompleted && !team1Won ? "text-gray-500" : ""}`}
-          >
+          <div className="font-medium text-xs truncate flex-1 mr-2">
             {translateContent(team1Name)}
           </div>
-          <div
-            className={`font-medium text-sm ${team1Won ? "text-forest-400" : isCompleted && !team1Won ? "text-gray-500" : ""}`}
-          >
+          <div className="font-medium text-xs">
             {team1Score}
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <div
-            className={`font-medium text-sm ${team2Won ? "text-forest-400" : isCompleted && !team2Won ? "text-gray-500" : ""}`}
-          >
+          <div className="font-medium text-xs truncate flex-1 mr-2">
             {translateContent(team2Name)}
           </div>
-          <div
-            className={`font-medium text-sm ${team2Won ? "text-forest-400" : isCompleted && !team2Won ? "text-gray-500" : ""}`}
-          >
+          <div className="font-medium text-xs">
             {team2Score}
           </div>
         </div>

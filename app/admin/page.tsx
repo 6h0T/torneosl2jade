@@ -20,7 +20,7 @@ export default async function AdminPage() {
           <div className="flex justify-between items-center">
             <p className="text-gray-300">Gestiona torneos, equipos y partidos.</p>
             <div className="flex gap-2">
-              <Link href="/admin/torneos/nuevo">
+              <Link href="/admin/torneos/crear">
                 <Button className="bg-jade-600 hover:bg-jade-500 text-white">
                   <Trophy className="h-4 w-4 mr-2" />
                   Crear Nuevo Torneo

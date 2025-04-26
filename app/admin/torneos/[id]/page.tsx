@@ -22,17 +22,20 @@ import BracketActions from "@/components/admin/bracket-actions"
 
 import { generateBracketAction, deleteMatchesAction } from "./actions"
 
-export default async function AdminTournamentPage({
-  params,
-  searchParams,
-}: {
+interface PageProps {
   params: { id: string }
   searchParams: { [key: string]: string | string[] | undefined }
-}) {
-  const tournamentId = Number.parseInt(params.id)
+}
 
-  // Usar searchParams para forzar una recarga fresca
-  const timestamp = searchParams.t || Date.now()
+export default async function AdminTournamentPage({ params, searchParams }: PageProps) {
+  // Convertir el ID a número de forma segura
+  const id = params?.id
+  if (!id || isNaN(Number(id))) {
+    redirect("/admin")
+  }
+
+  const tournamentId = Number(id)
+  const timestamp = typeof searchParams?.t === 'string' ? searchParams.t : Date.now().toString()
 
   // Obtener datos del torneo
   const tournament = await getTournamentById(tournamentId)

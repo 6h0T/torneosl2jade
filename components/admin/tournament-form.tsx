@@ -12,6 +12,7 @@ import { Plus, Trash2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { createTournament, updateTournament } from "@/lib/supabase/admin-actions"
 import HtmlRulesEditor from "./html-rules-editor"
 import type { Tournament, TournamentPrize, TournamentRule } from "@/lib/types"
+import { useRouter } from "next/navigation"
 
 interface TournamentFormProps {
   tournament?: Tournament
@@ -21,6 +22,7 @@ interface TournamentFormProps {
 }
 
 export default function TournamentForm({ tournament, prizes = [], rules = [], htmlRules = "" }: TournamentFormProps) {
+  const router = useRouter()
   const isEditing = !!tournament
 
   const [formData, setFormData] = useState({
@@ -178,13 +180,13 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
             ...formData,
             prizes: tournamentPrizes,
             rules: tournamentRules,
-            htmlRules: currentHtmlRules, // Always use currentHtmlRules, not conditional on activeRulesTab
+            htmlRules: currentHtmlRules,
           })
         : await createTournament({
             ...formData,
             prizes: tournamentPrizes,
             rules: tournamentRules,
-            htmlRules: currentHtmlRules, // Always use currentHtmlRules, not conditional on activeRulesTab
+            htmlRules: currentHtmlRules,
           })
 
       setMessage({
@@ -193,34 +195,8 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
       })
 
       if (result.success && !isEditing) {
-        // Reset form after successful creation
-        setFormData({
-          title: "",
-          description: "",
-          dateRange: "",
-          prize: "",
-          format: "3v3",
-          mode: "PvP",
-          maxParticipants: 16,
-          status: "upcoming",
-          featured: false,
-          registrationType: "free",
-        })
-        setTournamentPrizes([
-          {
-            position: "1er Puesto",
-            reward: "",
-            icon: "trophy",
-            color: "text-yellow-500",
-          },
-        ])
-        setTournamentRules([
-          {
-            rule: "Prohibido el uso de hacks o programas externos.",
-            category: "Reglas Generales",
-          },
-        ])
-        setCurrentHtmlRules("")
+        // Redirigir a la página de administración del torneo recién creado
+        router.push(`/admin/torneos/${result.tournamentId}`)
       }
     } catch (error) {
       console.error("Error submitting form:", error)

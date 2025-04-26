@@ -1164,3 +1164,86 @@ export async function deleteExpelledTeams(tournamentId?: number) {
     }
   }
 }
+
+// Función para borrar un torneo
+export async function deleteTournament(tournamentId: number) {
+  try {
+    const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
+
+    // 1. Borrar los premios asociados
+    const { error: prizesError } = await supabase
+      .from("tournament_prizes")
+      .delete()
+      .eq("tournament_id", tournamentId)
+
+    if (prizesError) {
+      console.error("Error deleting prizes:", prizesError)
+    }
+
+    // 2. Borrar las reglas asociadas
+    const { error: rulesError } = await supabase
+      .from("tournament_rules")
+      .delete()
+      .eq("tournament_id", tournamentId)
+
+    if (rulesError) {
+      console.error("Error deleting rules:", rulesError)
+    }
+
+    // 3. Borrar los equipos asociados
+    const { error: teamsError } = await supabase
+      .from("teams")
+      .delete()
+      .eq("tournament_id", tournamentId)
+
+    if (teamsError) {
+      console.error("Error deleting teams:", teamsError)
+    }
+
+    // 4. Borrar los partidos asociados
+    const { error: matchesError } = await supabase
+      .from("matches")
+      .delete()
+      .eq("tournament_id", tournamentId)
+
+    if (matchesError) {
+      console.error("Error deleting matches:", matchesError)
+    }
+
+    // 5. Finalmente, borrar el torneo
+    const { error: tournamentError } = await supabase
+      .from("tournaments")
+      .delete()
+      .eq("id", tournamentId)
+
+    if (tournamentError) {
+      console.error("Error deleting tournament:", tournamentError)
+      return {
+        success: false,
+        message: "Error al borrar el torneo: " + tournamentError.message,
+      }
+    }
+
+    // Revalidar las rutas necesarias
+    revalidatePath("/admin")
+    revalidatePath("/")
+
+    return {
+      success: true,
+      message: "Torneo borrado exitosamente",
+    }
+  } catch (error) {
+    console.error("Error:", error)
+    return {
+      success: false,
+      message: "Error inesperado al borrar el torneo",
+    }
+  }
+}

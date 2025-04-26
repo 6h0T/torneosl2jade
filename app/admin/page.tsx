@@ -6,6 +6,7 @@ import Link from "next/link"
 import { getTournaments } from "@/lib/supabase/actions"
 import AuthCheck from "@/components/admin/auth-check"
 import DatabaseStatus from "@/components/admin/database-status"
+import DeleteTournamentButton from "@/components/admin/delete-tournament-button"
 
 export default async function AdminPage() {
   // Obtener todos los torneos
@@ -87,6 +88,7 @@ export default async function AdminPage() {
                     <Edit className="h-4 w-4" />
                   </Button>
                 </Link>
+                <DeleteTournamentButton tournamentId={tournament.id} tournamentTitle={tournament.title} />
               </CardFooter>
             </Card>
           ))}

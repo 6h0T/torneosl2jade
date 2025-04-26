@@ -183,31 +183,49 @@ export async function registerTeam(formData: FormData) {
   try {
     const teamName = formData.get("teamName") as string
 
-    // Obtener datos de los miembros del equipo
-    const member1Name = formData.get("member1Name") as string
-    // Usamos un valor por defecto para la clase
-    const member1Class = (formData.get("member1Class") as string) || "No especificada"
-
-    const member2Name = formData.get("member2Name") as string
-    const member2Class = (formData.get("member2Class") as string) || "No especificada"
-
-    const member3Name = formData.get("member3Name") as string
-    const member3Class = (formData.get("member3Class") as string) || "No especificada"
-
-    // Validar datos
-    if (!teamName || !member1Name || !member2Name || !member3Name) {
-      return {
-        success: false,
-        message: "Por favor, completa todos los campos obligatorios.",
-      }
-    }
-
     // Obtener el torneo activo
     const activeTournament = await getActiveTournament()
     if (!activeTournament) {
       return {
         success: false,
         message: "No hay torneos activos disponibles para registro.",
+      }
+    }
+
+    // Obtener datos de los miembros del equipo según el tipo de torneo
+    const member1Name = formData.get("member1Name") as string
+    const member1Class = (formData.get("member1Class") as string) || "No especificada"
+
+    // Si es torneo 3v3, obtener los otros dos miembros
+    let teamMembers = [
+      { name: member1Name, character_class: member1Class }
+    ]
+
+    if (activeTournament.type === "3v3") {
+      const member2Name = formData.get("member2Name") as string
+      const member2Class = (formData.get("member2Class") as string) || "No especificada"
+      const member3Name = formData.get("member3Name") as string
+      const member3Class = (formData.get("member3Class") as string) || "No especificada"
+
+      // Validar datos para 3v3
+      if (!teamName || !member1Name || !member2Name || !member3Name) {
+        return {
+          success: false,
+          message: "Por favor, completa todos los campos obligatorios.",
+        }
+      }
+
+      teamMembers.push(
+        { name: member2Name, character_class: member2Class },
+        { name: member3Name, character_class: member3Class }
+      )
+    } else {
+      // Validar datos para 1v1
+      if (!teamName || !member1Name) {
+        return {
+          success: false,
+          message: "Por favor, completa todos los campos obligatorios.",
+        }
       }
     }
 
@@ -249,15 +267,15 @@ export async function registerTeam(formData: FormData) {
 
     const teamId = teamData[0].id
 
-    // Preparar miembros del equipo
-    const teamMembers = [
-      { team_id: teamId, name: member1Name, character_class: member1Class },
-      { team_id: teamId, name: member2Name, character_class: member2Class },
-      { team_id: teamId, name: member3Name, character_class: member3Class },
-    ]
+    // Preparar miembros del equipo con team_id
+    const membersToInsert = teamMembers.map(member => ({
+      team_id: teamId,
+      name: member.name,
+      character_class: member.character_class
+    }))
 
     // Insertar miembros del equipo
-    const { error: membersError } = await supabase.from("team_members").insert(teamMembers)
+    const { error: membersError } = await supabase.from("team_members").insert(membersToInsert)
 
     if (membersError) {
       console.error("Error al insertar miembros:", membersError)

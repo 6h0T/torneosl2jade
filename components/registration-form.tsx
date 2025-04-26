@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { useState } from "react"
 import { CountrySelector, type Country } from "@/components/country-selector"
 import RegistrationSuccessDialog from "@/components/registration-success-dialog"
+import { useRouter } from "next/navigation"
 
 interface RegistrationFormProps {
   activeTournament: any
@@ -26,6 +27,8 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [registrationResult, setRegistrationResult] = useState<any>(null)
+  const [tournamentType, setTournamentType] = useState<"1v1" | "3v3">("3v3")
+  const router = useRouter()
 
   // Función para manejar el envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -55,6 +58,7 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
           setShowSuccessDialog(true)
           console.log("Cliente: Dialog should be visible now")
         }, 100)
+        router.push(`/torneos/${result.tournamentId}`)
       } else if (result && !result.success) {
         console.log("Cliente: Error en el registro:", result.message)
         // Mostrar mensaje de error del servidor
@@ -149,39 +153,44 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                     </div>
                   </div>
 
-                  {/* Member 2 */}
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <Label htmlFor="member2Name" className="text-jade-400">
-                        {t("member2")}
-                      </Label>
-                      <Input
-                        id="member2Name"
-                        name="member2Name"
-                        placeholder={t("characterName")}
-                        required
-                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
-                      />
-                      <input type="hidden" name="member2Class" value="No especificada" />
-                    </div>
-                  </div>
+                  {/* Renderizar miembros adicionales solo si es 3v3 */}
+                  {activeTournament.type === "3v3" && (
+                    <>
+                      {/* Member 2 */}
+                      <div className="space-y-4 mb-6">
+                        <div>
+                          <Label htmlFor="member2Name" className="text-jade-400">
+                            {t("member2")}
+                          </Label>
+                          <Input
+                            id="member2Name"
+                            name="member2Name"
+                            placeholder={t("characterName")}
+                            required
+                            className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
+                          />
+                          <input type="hidden" name="member2Class" value="No especificada" />
+                        </div>
+                      </div>
 
-                  {/* Member 3 */}
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="member3Name" className="text-jade-400">
-                        {t("member3")}
-                      </Label>
-                      <Input
-                        id="member3Name"
-                        name="member3Name"
-                        placeholder={t("characterName")}
-                        required
-                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
-                      />
-                      <input type="hidden" name="member3Class" value="No especificada" />
-                    </div>
-                  </div>
+                      {/* Member 3 */}
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="member3Name" className="text-jade-400">
+                            {t("member3")}
+                          </Label>
+                          <Input
+                            id="member3Name"
+                            name="member3Name"
+                            placeholder={t("characterName")}
+                            required
+                            className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
+                          />
+                          <input type="hidden" name="member3Class" value="No especificada" />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -8,6 +8,7 @@ export interface Tournament {
   prize: string
   format: string
   mode: string
+  type: "1v1" | "3v3"
   max_participants: number
   featured: boolean
   registration_type?: "free" | "paid"

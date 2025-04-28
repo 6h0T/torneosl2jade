@@ -69,12 +69,12 @@ export default function RankingPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-300 mb-4">{t("currentSeasonDescription")}</p>
+              <p className="text-sm text-gray-300 mb-4">
+                El sistema de temporadas estará disponible próximamente. 
+                Los jugadores podrán competir por recompensas exclusivas al final de cada temporada.
+              </p>
               <div className="text-sm">
-                <p className="font-medium text-forest-400">{t("currentSeason")}: 2023-Q3</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {t("endsOn")}: 30 {t("september")} 2023
-                </p>
+                <p className="font-medium text-amber-400">¡Próximamente!</p>
               </div>
             </CardContent>
           </Card>

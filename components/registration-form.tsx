@@ -13,6 +13,7 @@ import { useState } from "react"
 import { CountrySelector, type Country } from "@/components/country-selector"
 import RegistrationSuccessDialog from "@/components/registration-success-dialog"
 import { useRouter } from "next/navigation"
+import RegistrationForm1v1 from "@/components/registration-form-1v1"
 
 interface RegistrationFormProps {
   activeTournament: any
@@ -72,19 +73,25 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
     }
   }
 
+  if (activeTournament.type === "1v1") {
+    return (
+      <RegistrationForm1v1 handleRegister={handleRegister} activeTournament={activeTournament} />
+    )
+  }
+
+  // Formulario para 3vs3 (por defecto)
   return (
     <div className="container mx-auto px-4 py-8">
       <Link href="/" className="flex items-center text-forest-400 mb-6 hover:underline">
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t("backToMain")}
       </Link>
-
       <div className="max-w-md mx-auto">
         <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
           <CardHeader>
-            <CardTitle className="text-xl text-forest-400">{t("teamRegistration")}</CardTitle>
+            <CardTitle className="text-xl text-forest-400">Registro De Equipo</CardTitle>
             <CardDescription>
-              {t("completeForm")} {activeTournament.title}
+              Completa el formulario para registrar tu equipo en el torneo {activeTournament.title}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -93,25 +100,24 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                 {errorMessage}
               </div>
             )}
-
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
+                {/* Nombre de equipo y teléfono */}
                 <div>
-                  <Label htmlFor="teamName" className="text-forest-400">
-                    {t("teamName")}
+                  <Label htmlFor="teamName" className="text-forest-400 text-lg font-semibold">
+                    Nombre del equipo
                   </Label>
                   <Input
                     id="teamName"
                     name="teamName"
-                    placeholder={t("teamName")}
+                    placeholder="Nombre del equipo"
                     required
                     className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
                   />
                 </div>
-
                 <div className="mt-4 space-y-4">
-                  <Label htmlFor="teamPhone" className="text-forest-400">
-                    {t("teamPhone")} <span className="text-gray-400 text-xs">(Opcional)</span>
+                  <Label htmlFor="teamPhone" className="text-forest-400 text-lg font-semibold">
+                    Teléfono de contacto <span className="text-gray-400 text-xs">(Opcional)</span>
                   </Label>
                   <div className="flex space-x-2">
                     <div className="w-1/3">
@@ -132,68 +138,59 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
                     />
                   </div>
                 </div>
-
                 <div className="pt-4 border-t border-jade-800/30">
-                  <h3 className="text-sm font-medium mb-4 text-forest-400">{t("teamMembers")}</h3>
-
-                  {/* Member 1 (Leader) */}
+                  <h3 className="text-lg font-bold mb-4 text-forest-400">
+                    Miembros del equipo
+                  </h3>
+                  {/* Miembro 1 (siempre) */}
                   <div className="space-y-4 mb-6">
                     <div>
-                      <Label htmlFor="member1Name" className="text-jade-400">
-                        {t("member1")}
+                      <Label htmlFor="member1Name" className="text-jade-400 font-semibold">
+                        Miembro 1 (Líder)
                       </Label>
                       <Input
                         id="member1Name"
                         name="member1Name"
-                        placeholder={t("characterName")}
+                        placeholder="Nombre del personaje"
                         required
                         className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
                       />
                       <input type="hidden" name="member1Class" value="No especificada" />
                     </div>
                   </div>
-
-                  {/* Renderizar miembros adicionales solo si es 3v3 */}
-                  {activeTournament.type === "3v3" && (
-                    <>
-                      {/* Member 2 */}
-                      <div className="space-y-4 mb-6">
-                        <div>
-                          <Label htmlFor="member2Name" className="text-jade-400">
-                            {t("member2")}
-                          </Label>
-                          <Input
-                            id="member2Name"
-                            name="member2Name"
-                            placeholder={t("characterName")}
-                            required
-                            className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
-                          />
-                          <input type="hidden" name="member2Class" value="No especificada" />
-                        </div>
-                      </div>
-
-                      {/* Member 3 */}
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="member3Name" className="text-jade-400">
-                            {t("member3")}
-                          </Label>
-                          <Input
-                            id="member3Name"
-                            name="member3Name"
-                            placeholder={t("characterName")}
-                            required
-                            className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
-                          />
-                          <input type="hidden" name="member3Class" value="No especificada" />
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  {/* Miembro 2 y 3 solo si es 3vs3 */}
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <Label htmlFor="member2Name" className="text-jade-400 font-semibold">
+                        Miembro 2
+                      </Label>
+                      <Input
+                        id="member2Name"
+                        name="member2Name"
+                        placeholder="Nombre del personaje"
+                        required
+                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
+                      />
+                      <input type="hidden" name="member2Class" value="No especificada" />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="member3Name" className="text-jade-400 font-semibold">
+                        Miembro 3
+                      </Label>
+                      <Input
+                        id="member3Name"
+                        name="member3Name"
+                        placeholder="Nombre del personaje"
+                        required
+                        className="bg-black/50 border-forest-800/50 focus:border-forest-400 text-white"
+                      />
+                      <input type="hidden" name="member3Class" value="No especificada" />
+                    </div>
+                  </div>
                 </div>
               </div>
-
               <Button
                 type="submit"
                 className="w-full bg-forest-600 hover:bg-forest-700 text-white"
@@ -205,7 +202,6 @@ export default function RegistrationForm({ activeTournament, handleRegister }: R
           </CardContent>
         </Card>
       </div>
-
       {/* Diálogo de registro exitoso - siempre renderizado */}
       <RegistrationSuccessDialog
         open={showSuccessDialog}

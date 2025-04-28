@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CheckCircle2, XCircle, AlertCircle, Phone } from "lucide-react"
 import type { Team } from "@/lib/types"
-import { approveTeam, rejectTeam } from "@/lib/supabase/actions"
+import { approveTeam, rejectTeam } from "@/lib/supabase/admin-actions"
 
 interface TeamManagementProps {
   teams: Team[]
@@ -60,6 +60,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                   <TableHead className="text-jade-300">ID</TableHead>
                   <TableHead className="text-jade-300">Nombre</TableHead>
                   <TableHead className="text-jade-300">Teléfono</TableHead>
+                  <TableHead className="text-jade-300">Miembros</TableHead>
                   <TableHead className="text-jade-300">Fecha de registro</TableHead>
                   <TableHead className="text-jade-300">Estado</TableHead>
                   <TableHead className="text-jade-300">Acciones</TableHead>
@@ -75,6 +76,11 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                         <Phone className="h-3 w-3 text-jade-400 mr-1" />
                         {team.phone || "No disponible"}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {team.members && team.members.length > 0
+                        ? team.members.map((m) => m.name).join(", ")
+                        : "Sin miembros"}
                     </TableCell>
                     <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
@@ -104,6 +110,7 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                   <TableHead className="text-jade-300">ID</TableHead>
                   <TableHead className="text-jade-300">Nombre</TableHead>
                   <TableHead className="text-jade-300">Teléfono</TableHead>
+                  <TableHead className="text-jade-300">Miembros</TableHead>
                   <TableHead className="text-jade-300">Fecha de registro</TableHead>
                   <TableHead className="text-jade-300">Fecha de aprobación</TableHead>
                   <TableHead className="text-jade-300">Estado</TableHead>
@@ -119,6 +126,11 @@ export default function TeamManagement({ teams, tournamentId }: TeamManagementPr
                         <Phone className="h-3 w-3 text-jade-400 mr-1" />
                         {team.phone || "No disponible"}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {team.members && team.members.length > 0
+                        ? team.members.map((m) => m.name).join(", ")
+                        : "Sin miembros"}
                     </TableCell>
                     <TableCell>{new Date(team.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>{team.approved_at ? new Date(team.approved_at).toLocaleDateString() : "N/A"}</TableCell>

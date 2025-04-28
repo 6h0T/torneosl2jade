@@ -453,19 +453,11 @@ async function TeamCard({
   tournamentId: number
   status: "pending" | "approved" | "rejected" | "expelled"
 }) {
-  // Obtener miembros del equipo con manejo de errores
-  let members: TeamMemberType[] = []
-  let error: Error | null = null
-
-  try {
-    members = await getTeamMembers(team.id)
-  } catch (err) {
-    console.error(`Error fetching members for team ${team.id}:`, err)
-    error = err instanceof Error ? err : new Error(String(err))
-  }
+  // Utilizar los miembros que ya vienen incluidos en el equipo en lugar de hacer una llamada adicional
+  let members: TeamMemberType[] = team.members || [];
 
   // Add a timestamp to force re-rendering when the component is displayed
-  const renderTimestamp = Date.now()
+  const renderTimestamp = Date.now();
 
   return (
     <div className="bg-black/60 border border-jade-800/30 rounded-lg p-3">
@@ -480,25 +472,18 @@ async function TeamCard({
         </div>
       </div>
 
-      {error ? (
-        <div className="text-red-400 text-sm flex items-center">
-          <AlertCircle className="h-4 w-4 mr-1" />
-          Error al cargar miembros del equipo
-        </div>
-      ) : (
-        <div className="space-y-1 text-sm">
-          {members.length > 0 ? (
-            members.map((member) => (
-              <div key={`${member.id}-${renderTimestamp}`} className="flex justify-between">
-                <span>{member.name}</span>
-                <span className="text-gray-400 text-xs">{member.character_class}</span>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-400 text-xs italic">No hay información de miembros disponible.</p>
-          )}
-        </div>
-      )}
+      <div className="space-y-1 text-sm">
+        {members.length > 0 ? (
+          members.map((member) => (
+            <div key={`${member.id}-${renderTimestamp}`} className="flex justify-between">
+              <span>{member.name}</span>
+              <span className="text-gray-400 text-xs">{member.character_class}</span>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-400 text-xs italic">No hay información de miembros disponible.</p>
+        )}
+      </div>
 
       <div className="mt-2 text-xs">
         {/* Mostrar el teléfono en verde por encima del estado */}

@@ -196,12 +196,12 @@ export async function registerTeam(formData: FormData) {
     const member1Name = formData.get("member1Name") as string
     const member1Class = (formData.get("member1Class") as string) || "No especificada"
 
-    // Si es torneo 3v3, obtener los otros dos miembros
+    // Si es torneo 3v3 (o si el ID del torneo es 1), obtener los otros dos miembros
     let teamMembers = [
       { name: member1Name, character_class: member1Class }
     ]
 
-    if (activeTournament.type === "3v3") {
+    if (activeTournament.type === "3v3" || activeTournament.id === 1) {
       const member2Name = formData.get("member2Name") as string
       const member2Class = (formData.get("member2Class") as string) || "No especificada"
       const member3Name = formData.get("member3Name") as string
@@ -231,6 +231,12 @@ export async function registerTeam(formData: FormData) {
 
     // Crear cliente de Supabase
     const supabase = createServerComponentClient()
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error de conexión con la base de datos. Por favor, inténtalo de nuevo.",
+      }
+    }
 
     // Verificar si ya existe un equipo con ese nombre en el torneo
     const { data: existingTeam } = await supabase

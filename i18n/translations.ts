@@ -59,7 +59,7 @@ export const translations = {
     noMembersInfo: "No hay información de miembros disponible.",
     teamEmail: "Email del Equipo",
     teamPhone: "Teléfono del Equipo",
-    selectCountry: "Seleccionar país",
+    selectCountry: "País",
     searchCountry: "Buscar país",
     noCountryFound: "No se encontró el país",
 
@@ -239,7 +239,7 @@ export const translations = {
     noMembersInfo: "No member information available.",
     teamEmail: "Team Email",
     teamPhone: "Team Phone",
-    selectCountry: "Select country",
+    selectCountry: "Country",
     searchCountry: "Search country",
     noCountryFound: "No country found",
 
@@ -418,7 +418,7 @@ export const translations = {
     noMembersInfo: "Nenhuma informação de membros disponível.",
     teamEmail: "Email da Equipe",
     teamPhone: "Telefone da Equipe",
-    selectCountry: "Selecionar país",
+    selectCountry: "País",
 
     // Rules
     rules: "Regras",

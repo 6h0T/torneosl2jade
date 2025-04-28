@@ -45,6 +45,7 @@ export interface Team {
   rejection_reason?: string
   expulsion_reason?: string
   phone?: string
+  members?: TeamMember[]
 }
 
 export interface TeamMember {

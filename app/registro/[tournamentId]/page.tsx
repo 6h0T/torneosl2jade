@@ -11,14 +11,16 @@ interface RegistrationPageProps {
 export default async function TournamentRegistrationPage({ params }: RegistrationPageProps) {
   const tournament = await getTournamentById(parseInt(params.tournamentId))
 
-  // If tournament doesn't exist or is not active, redirect to registration page
-  if (!tournament || tournament.status !== "active") {
+  // If tournament doesn't exist or is not active/upcoming, redirect to registration page
+  if (!tournament || (tournament.status !== "active" && tournament.status !== "upcoming")) {
     redirect("/registro")
   }
 
   async function handleRegister(formData: FormData) {
     "use server"
     console.log("Servidor: Procesando registro...")
+    // Asegurar que el ID del torneo se pasa correctamente en el formulario
+    formData.append("tournamentId", params.tournamentId)
     const result = await registerTeam(formData)
     console.log("Servidor: Resultado del registro:", result)
 

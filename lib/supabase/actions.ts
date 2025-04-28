@@ -195,21 +195,31 @@ export async function getMatchesByTournament(tournamentId: number, phase?: strin
 export async function registerTeam(formData: FormData) {
   try {
     const teamName = formData.get("teamName") as string
-
-    // Obtener el torneo activo
-    const activeTournament = await getActiveTournament()
-    if (!activeTournament) {
+    
+    // Obtener el ID del torneo del formulario o buscar el torneo activo
+    let tournament = null
+    const tournamentIdFromForm = formData.get("tournamentId")
+    
+    if (tournamentIdFromForm) {
+      // Si se proporciona un ID de torneo, obtener ese torneo específico
+      tournament = await getTournamentById(parseInt(tournamentIdFromForm as string))
+    } else {
+      // Fallback al método anterior: obtener el torneo activo
+      tournament = await getActiveTournament()
+    }
+    
+    if (!tournament) {
       return {
         success: false,
-        message: "No hay torneos activos disponibles para registro.",
+        message: "No se encontró el torneo para el registro.",
       }
     }
 
-    // Verificar si las inscripciones están abiertas
-    if (activeTournament.registration_status === "closed") {
+    // Verificar si las inscripciones están abiertas (estado activo o próximo)
+    if (tournament.status !== "active" && tournament.status !== "upcoming") {
       return {
         success: false,
-        message: "Las inscripciones para este torneo están cerradas.",
+        message: "Las inscripciones para este torneo no están disponibles.",
       }
     }
 
@@ -226,13 +236,13 @@ export async function registerTeam(formData: FormData) {
     const { data: approvedTeams, error: countError } = await supabase
       .from("teams")
       .select("id")
-      .eq("tournament_id", activeTournament.id)
+      .eq("tournament_id", tournament.id)
       .eq("status", "approved")
 
     if (countError) {
       console.error("Error al verificar cupo:", countError)
       // No interrumpimos el registro si falla la verificación
-    } else if (approvedTeams && approvedTeams.length >= activeTournament.max_participants) {
+    } else if (approvedTeams && approvedTeams.length >= tournament.max_participants) {
       return {
         success: false,
         message: "Lo sentimos, el torneo ya está lleno. No se pueden aceptar más registros.",
@@ -248,7 +258,7 @@ export async function registerTeam(formData: FormData) {
       { name: member1Name, character_class: member1Class }
     ]
 
-    if (activeTournament.type === "3v3" || activeTournament.id === 1) {
+    if (tournament.type === "3v3" || tournament.id === 1) {
       const member2Name = formData.get("member2Name") as string
       const member2Class = (formData.get("member2Class") as string) || "No especificada"
       const member3Name = formData.get("member3Name") as string
@@ -281,7 +291,7 @@ export async function registerTeam(formData: FormData) {
       .from("teams")
       .select("id")
       .eq("name", teamName)
-      .eq("tournament_id", activeTournament.id)
+      .eq("tournament_id", tournament.id)
       .maybeSingle()
 
     if (existingTeam) {
@@ -298,7 +308,7 @@ export async function registerTeam(formData: FormData) {
 
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
-      .insert([{ name: teamName, phone: teamPhone, tournament_id: activeTournament.id, status: "pending" }])
+      .insert([{ name: teamName, phone: teamPhone, tournament_id: tournament.id, status: "pending" }])
       .select()
 
     if (teamError) {
@@ -333,13 +343,13 @@ export async function registerTeam(formData: FormData) {
     }
 
     // Revalidar las páginas para mostrar el equipo actualizado
-    revalidatePath(`/torneos/${activeTournament.id}`)
+    revalidatePath(`/torneos/${tournament.id}`)
     revalidatePath("/")
 
     return {
       success: true,
       message: "Equipo registrado correctamente. ¡Buena suerte en el torneo!",
-      tournamentId: activeTournament.id,
+      tournamentId: tournament.id,
     }
   } catch (error) {
     console.error("Error en el registro:", error)

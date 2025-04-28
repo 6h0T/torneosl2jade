@@ -4,27 +4,25 @@ import { getActiveTournament, getTournaments } from "@/lib/supabase/actions"
 import { redirect } from "next/navigation"
 import RegistrationForm from "@/components/registration-form"
 import TournamentSelector from "@/components/tournament-selector"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 export default async function RegistrationPage() {
-  // Get all active tournaments
-  const tournaments = await getTournaments("active")
-
-  // If no tournaments available, redirect to home page
-  if (!tournaments || tournaments.length === 0) {
-    redirect("/")
-  }
-
-  async function handleRegister(formData: FormData) {
-    "use server"
-    console.log("Servidor: Procesando registro...")
-    const result = await registerTeam(formData)
-    console.log("Servidor: Resultado del registro:", result)
-
-    return result
-  }
+  // Obtener TODOS los torneos sin filtrar por estado
+  const allTournaments = await getTournaments()
+  
+  // Log de diagnóstico
+  console.log("Torneos disponibles para registro:", allTournaments?.map(t => ({
+    id: t.id,
+    title: t.title,
+    status: t.status
+  })))
+  
+  // Filtrar torneos activos y próximos
+  const availableTournaments = allTournaments?.filter(
+    t => t.status === "active" || t.status === "upcoming"
+  ) || []
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-forest-950 to-forest-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -39,7 +37,32 @@ export default async function RegistrationPage() {
         </div>
 
         <div className="mt-8">
-          <TournamentSelector tournaments={tournaments} />
+          {availableTournaments.length > 0 ? (
+            <TournamentSelector tournaments={availableTournaments} />
+          ) : (
+            <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
+              <CardHeader>
+                <CardTitle className="text-xl text-forest-400">No hay torneos disponibles</CardTitle>
+                <CardDescription className="text-forest-200">
+                  Actualmente no hay torneos con inscripciones abiertas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="p-4 rounded-lg bg-amber-950/50 border border-amber-900/50 text-amber-200 mb-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 mr-2 mt-0.5" />
+                    <div>
+                      <p className="text-sm">Los torneos con estado "Próximo" o "Activo" aparecerán aquí para permitir registros.</p>
+                      <p className="text-sm mt-2">Por favor, vuelve más tarde cuando haya torneos disponibles.</p>
+                    </div>
+                  </div>
+                </div>
+                <Link href="/" className="text-forest-400 hover:underline block text-center">
+                  Volver al inicio
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

@@ -643,15 +643,21 @@ async function updateTeamRankings(winnerId: number, loserId: number, phase: stri
     // Puntos por victoria en un partido
     const victoryPoints = 10
 
-    // Puntos adicionales según la fase del torneo
+    // Puntos adicionales según la fase del torneo (nuevo sistema de puntos actualizado)
     let phasePoints = 0
     if (phase === "final") {
-      phasePoints = 100 // Victoria en torneo
+      phasePoints = 15 // Victoria en torneo (15 puntos por campeonato)
     } else if (phase === "semiFinals") {
-      phasePoints = 50 // Semifinalista
-    } else if (phase === "quarterFinals") {
-      phasePoints = 25 // Cuartofinalista
+      phasePoints = 5 // Semifinalista
+    } 
+    
+    // El subcampeón (perdedor de la final) recibe 10 puntos
+    let loserPhasePoints = 0
+    if (phase === "final") {
+      loserPhasePoints = 10 // Segundo lugar
     }
+
+    console.log(`Actualizando ranking: Ganador ${winnerId} con ${victoryPoints + phasePoints} puntos (${victoryPoints} por victoria + ${phasePoints} por fase)`)
 
     // Actualizar el ranking del equipo ganador
     const { data: winnerRanking, error: winnerRankingError } = await supabase
@@ -675,6 +681,8 @@ async function updateTeamRankings(winnerId: number, loserId: number, phase: stri
           last_updated: new Date().toISOString(),
         })
         .eq("team_id", winnerId)
+
+      console.log(`Ranking actualizado: Equipo ${winnerId} ahora tiene ${winnerRanking.points + victoryPoints + phasePoints} puntos`)
     } else {
       // Crear nuevo ranking
       await supabase.from("team_rankings").insert({
@@ -685,6 +693,8 @@ async function updateTeamRankings(winnerId: number, loserId: number, phase: stri
         tournaments_played: 1,
         last_updated: new Date().toISOString(),
       })
+
+      console.log(`Nuevo ranking creado: Equipo ${winnerId} con ${victoryPoints + phasePoints} puntos iniciales`)
     }
 
     // Actualizar el ranking del equipo perdedor
@@ -704,20 +714,25 @@ async function updateTeamRankings(winnerId: number, loserId: number, phase: stri
       await supabase
         .from("team_rankings")
         .update({
+          points: loserRanking.points + loserPhasePoints, // Sumamos puntos por subcampeonato si aplica
           losses: loserRanking.losses + 1,
           last_updated: new Date().toISOString(),
         })
         .eq("team_id", loserId)
+
+      console.log(`Ranking del perdedor actualizado: Equipo ${loserId} ahora tiene ${loserRanking.points + loserPhasePoints} puntos`)
     } else {
       // Crear nuevo ranking
       await supabase.from("team_rankings").insert({
         team_id: loserId,
-        points: 0,
+        points: loserPhasePoints, // Puntos iniciales por subcampeonato si aplica
         wins: 0,
         losses: 1,
         tournaments_played: 1,
         last_updated: new Date().toISOString(),
       })
+
+      console.log(`Nuevo ranking creado para perdedor: Equipo ${loserId} con ${loserPhasePoints} puntos iniciales`)
     }
   } catch (error) {
     console.error("Error al actualizar rankings de equipos:", error)

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, Users, Trophy, Video, Plus, Edit } from "lucide-react"
+import { CalendarDays, Users, Trophy, Video, Plus, Edit, Award, Trash, Star } from "lucide-react"
 import Link from "next/link"
 import { getTournaments } from "@/lib/supabase/actions"
 import AuthCheck from "@/components/admin/auth-check"
@@ -116,6 +116,63 @@ export default async function AdminPage() {
                   className="w-full border-jade-600 text-jade-400 hover:bg-jade-900/50 hover:text-jade-100 hover:border-jade-400 shadow-[0_0_10px_rgba(0,255,170,0.1)]"
                 >
                   Administrar
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+
+          {/* Nueva Card para limpiar rankings */}
+          <Card className="bg-black/80 backdrop-blur-sm border-red-800/30 col-span-1">
+            <CardHeader className="p-4 pb-2">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-red-400 drop-shadow-[0_0_5px_rgba(255,100,100,0.5)]">
+                  Mantenimiento
+                </CardTitle>
+                <Badge className="bg-red-600">
+                  Herramientas
+                </Badge>
+              </div>
+              <CardDescription className="text-gray-300">
+                Herramientas de mantenimiento y limpieza de datos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0">
+              <div className="flex items-center text-sm">
+                <Award className="mr-2 h-4 w-4 text-red-400" />
+                <span>Limpiar rankings de prueba para torneos 3vs3</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <Star className="mr-2 h-4 w-4 text-yellow-400" />
+                <span>Corregir puntos de campeones 1vs1</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <Trash className="mr-2 h-4 w-4 text-red-400" />
+                <span>Eliminar datos obsoletos o incorrectos</span>
+              </div>
+            </CardContent>
+            <CardFooter className="p-4 pt-0 grid grid-cols-1 gap-2">
+              <Link href="/admin/limpiar-rankings" className="w-full">
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                >
+                  Limpiar Rankings 3vs3
+                </Button>
+              </Link>
+              <Link href="/api/set-1v1-ranking" className="w-full">
+                <Button
+                  variant="default"
+                  className="w-full bg-yellow-600 hover:bg-yellow-500"
+                >
+                  Establecer Orden Ranking 1vs1
+                </Button>
+              </Link>
+              <Link href="/admin/agregar-puntos" className="w-full">
+                <Button
+                  variant="default"
+                  className="w-full bg-amber-600 hover:bg-amber-500"
+                >
+                  Añadir Puntos Extra
                 </Button>
               </Link>
             </CardFooter>

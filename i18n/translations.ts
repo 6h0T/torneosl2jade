@@ -178,6 +178,15 @@ export const translations = {
       "Tu equipo está pendiente de aprobación por los administradores del torneo. Serás redirigido a la página del torneo en",
     seconds: "segundos.",
     goToTournamentNow: "Ir al torneo ahora",
+
+    // Winners podium
+    podium: "Podio del Torneo",
+    podiumFirstPlace: "1er Lugar",
+    podiumSecondPlace: "2do Lugar",
+    podiumThirdPlace: "3er Lugar - Semifinalistas",
+    characterClass: "Clase",
+    notAvailable: "No disponible",
+    tournamentCompleted: "Completado",
   },
   en: {
     // Navbar
@@ -357,6 +366,15 @@ export const translations = {
       "Your team is pending approval by tournament administrators. You will be redirected to the tournament page in",
     seconds: "seconds.",
     goToTournamentNow: "Go to tournament now",
+
+    // Winners podium
+    podium: "Tournament Podium",
+    podiumFirstPlace: "1st Place",
+    podiumSecondPlace: "2nd Place",
+    podiumThirdPlace: "3rd Place - Semifinalists",
+    characterClass: "Class",
+    notAvailable: "Not available",
+    tournamentCompleted: "Completed",
   },
   pt: {
     // Navbar
@@ -535,6 +553,15 @@ export const translations = {
       "Sua equipe está pendente de aprovação pelos administradores do torneio. Você será redirecionado para a página do torneio em",
     seconds: "segundos.",
     goToTournamentNow: "Ir para o torneio agora",
+
+    // Winners podium
+    podium: "Pódio do Torneio",
+    podiumFirstPlace: "1º Lugar",
+    podiumSecondPlace: "2º Lugar",
+    podiumThirdPlace: "3º Lugar - Semifinalistas",
+    characterClass: "Classe",
+    notAvailable: "Não disponível",
+    tournamentCompleted: "Concluído",
   },
 }
 

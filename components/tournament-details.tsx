@@ -25,6 +25,7 @@ import { motion } from "framer-motion"
 // Import both rules components
 import TournamentRulesDropdown from "@/components/tournament-rules-dropdown"
 import TournamentHtmlRules from "@/components/tournament-html-rules"
+import TournamentWinners from "@/components/tournament-winners"
 
 export default function TournamentDetails({
   tournament,
@@ -81,7 +82,14 @@ export default function TournamentDetails({
                 <div className="flex items-center text-sm">
                   <Clock className="mr-2 h-4 w-4 text-jade-400" />
                   <span>
-                    {t("status")}: <span className="text-amber-400 font-medium">{t("registrationsOpen")}</span>
+                    {t("status")}: 
+                    {tournament.status === "completed" ? (
+                      <span className="text-amber-400 font-medium ml-1">{t("tournamentCompleted")}</span>
+                    ) : tournament.status === "active" ? (
+                      <span className="text-green-400 font-medium ml-1">{t("active")}</span>
+                    ) : (
+                      <span className="text-amber-400 font-medium ml-1">{t("registrationsOpen")}</span>
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
@@ -141,8 +149,12 @@ export default function TournamentDetails({
           </Card>
         </div>
 
-        {/* Columna del bracket - 6 columnas */}
+        {/* Columna del bracket o ganadores - 6 columnas */}
         <div className="lg:col-span-6">
+          {tournament.status === "completed" ? (
+            <TournamentWinners tournamentId={tournamentId} format={tournament.format} />
+          ) : null}
+          
           <Card className="bg-black/80 backdrop-blur-sm border-jade-800/30">
             <CardHeader>
               <CardTitle className="text-lg text-jade-400 drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]">

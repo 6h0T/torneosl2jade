@@ -14,7 +14,6 @@ export async function createTournament(data: {
   mode: string
   maxParticipants: number
   status: string
-  registrationStatus: string
   featured: boolean
   registrationType: string
   prizes: Array<{
@@ -52,7 +51,6 @@ export async function createTournament(data: {
           mode: data.mode,
           max_participants: data.maxParticipants,
           status: data.status,
-          registration_status: data.registrationStatus,
           featured: data.featured,
           registration_type: data.registrationType,
           html_rules: data.htmlRules || null, // Store HTML rules
@@ -134,7 +132,6 @@ export async function updateTournament(data: {
   mode: string
   maxParticipants: number
   status: string
-  registrationStatus: string
   featured: boolean
   registrationType: string
   prizes: Array<{
@@ -173,7 +170,6 @@ export async function updateTournament(data: {
         mode: data.mode,
         max_participants: data.maxParticipants,
         status: data.status,
-        registration_status: data.registrationStatus,
         featured: data.featured,
         registration_type: data.registrationType,
         html_rules: data.htmlRules || null, // Update HTML rules
@@ -1316,9 +1312,11 @@ export async function deleteTournament(tournamentId: number) {
 // Función para verificar cupos y cerrar inscripciones si el torneo está lleno
 export async function checkAndCloseRegistration(tournamentId: number) {
   try {
+    console.log("Iniciando checkAndCloseRegistration para torneo:", tournamentId)
     const supabase = createServerComponentClient()
     
     if (!supabase) {
+      console.error("Error: No se pudo crear el cliente de Supabase")
       return {
         success: false,
         message: "Error al conectar con Supabase.",
@@ -1333,67 +1331,49 @@ export async function checkAndCloseRegistration(tournamentId: number) {
       .single()
 
     if (tournamentError || !tournament) {
-      console.error("Error fetching tournament:", tournamentError)
+      console.error("Error al obtener torneo:", tournamentError)
       return {
         success: false,
         message: "Error al obtener información del torneo.",
       }
     }
 
-    // Obtener equipos aprobados
-    const { data: approvedTeams, error: teamsError } = await supabase
-      .from("teams")
-      .select("id")
-      .eq("tournament_id", tournamentId)
-      .eq("status", "approved")
+    console.log("Estado actual del torneo:", {
+      id: tournament.id,
+      status: tournament.status
+    })
 
-    if (teamsError) {
-      console.error("Error fetching teams:", teamsError)
+    // Alternar el estado de las inscripciones
+    const newStatus = tournament.status === "upcoming" ? "active" : "upcoming"
+    console.log("Alternando estado de inscripciones a:", newStatus)
+    
+    const { error: updateError } = await supabase
+      .from("tournaments")
+      .update({ status: newStatus })
+      .eq("id", tournamentId)
+
+    if (updateError) {
+      console.error("Error al actualizar estado de inscripciones:", updateError)
       return {
         success: false,
-        message: "Error al obtener equipos del torneo.",
+        message: `Error al ${newStatus === "upcoming" ? "abrir" : "cerrar"} las inscripciones del torneo.`,
       }
     }
 
-    // Verificar si el torneo está lleno
-    const isFull = approvedTeams && approvedTeams.length >= tournament.max_participants
+    console.log("Estado de inscripciones actualizado correctamente a:", newStatus)
 
-    // Si el torneo está lleno y las inscripciones están abiertas, cerrarlas
-    if (isFull && tournament.registration_status === "open") {
-      const { error: updateError } = await supabase
-        .from("tournaments")
-        .update({ registration_status: "closed" })
-        .eq("id", tournamentId)
-
-      if (updateError) {
-        console.error("Error closing tournament registrations:", updateError)
-        return {
-          success: false,
-          message: "Error al cerrar las inscripciones del torneo.",
-        }
-      }
-
-      // Revalidar las rutas necesarias
-      revalidatePath("/admin")
-      revalidatePath("/")
-      revalidatePath(`/torneos/${tournamentId}`)
-      revalidatePath(`/admin/torneos/${tournamentId}`)
-
-      return {
-        success: true,
-        message: "Inscripciones cerradas automáticamente porque el torneo está lleno.",
-      }
-    }
+    // Revalidar las rutas necesarias
+    revalidatePath("/admin")
+    revalidatePath("/")
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
 
     return {
       success: true,
-      message: "No es necesario cerrar las inscripciones todavía.",
-      isFull,
-      currentCount: approvedTeams ? approvedTeams.length : 0,
-      maxParticipants: tournament.max_participants
+      message: `Inscripciones ${newStatus === "upcoming" ? "abiertas" : "cerradas"} correctamente.`,
     }
   } catch (error) {
-    console.error("Error:", error)
+    console.error("Error inesperado:", error)
     return {
       success: false,
       message: "Error inesperado al verificar el estado de las inscripciones.",
@@ -1443,6 +1423,100 @@ export async function updateTournamentStatus(tournamentId: number, newStatus: st
     return {
       success: false,
       message: "Error inesperado al actualizar el estado del torneo.",
+    }
+  }
+}
+
+// Nueva función para alternar entre registro y curso
+export async function toggleTournamentMode(tournamentId: number) {
+  try {
+    console.log("Alternando modo del torneo:", tournamentId)
+    const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      console.error("Error: No se pudo crear el cliente de Supabase")
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
+
+    // 1. Obtener información actual del torneo
+    const { data: tournament, error: tournamentError } = await supabase
+      .from("tournaments")
+      .select("status")
+      .eq("id", tournamentId)
+      .single()
+
+    if (tournamentError || !tournament) {
+      console.error("Error al obtener torneo:", tournamentError)
+      return {
+        success: false,
+        message: "Error al obtener información del torneo.",
+      }
+    }
+
+    console.log("Estado actual del torneo:", tournament.status)
+
+    // 2. Verificar cuántos equipos tiene este torneo
+    const { data: teams, error: teamsError } = await supabase
+      .from("teams")
+      .select("id, status")
+      .eq("tournament_id", tournamentId)
+
+    if (teamsError) {
+      console.error("Error al obtener equipos:", teamsError)
+    } else {
+      console.log(`Total de equipos para torneo ${tournamentId}:`, teams.length)
+      const approvedTeams = teams.filter(t => t.status === "approved")
+      console.log(`Equipos aprobados: ${approvedTeams.length}`)
+    }
+
+    // 3. Determinar el nuevo estado (alternar entre "upcoming" y "active")
+    const newStatus = tournament.status === "active" ? "upcoming" : "active"
+    console.log("Cambiando estado a:", newStatus)
+    
+    // 4. Actualizar solo el campo "status"
+    const { error: updateError } = await supabase
+      .from("tournaments")
+      .update({ status: newStatus })
+      .eq("id", tournamentId)
+
+    if (updateError) {
+      console.error("Error al actualizar estado del torneo:", updateError)
+      return {
+        success: false,
+        message: `Error al cambiar el estado del torneo a ${newStatus}.`,
+      }
+    }
+
+    console.log("Estado del torneo actualizado correctamente a:", newStatus)
+
+    // 5. Revalidar las rutas necesarias
+    // Forzar una revalidación más agresiva con el timestamp
+    const timestamp = Date.now()
+    revalidatePath(`/admin?t=${timestamp}`)
+    revalidatePath(`/?t=${timestamp}`)
+    revalidatePath(`/torneos/${tournamentId}?t=${timestamp}`)
+    revalidatePath(`/admin/torneos/${tournamentId}?t=${timestamp}`)
+    revalidatePath(`/admin/torneos?t=${timestamp}`)
+    
+    // Revalidar también otras rutas que podrían estar en caché
+    revalidatePath("/")
+    revalidatePath("/torneos")
+    revalidatePath("/admin/torneos")
+
+    return {
+      success: true,
+      message: newStatus === "upcoming" 
+        ? "Inscripciones abiertas correctamente."
+        : "Inscripciones cerradas correctamente.",
+    }
+  } catch (error) {
+    console.error("Error inesperado:", error)
+    return {
+      success: false,
+      message: "Error inesperado al cambiar el estado del torneo.",
     }
   }
 }

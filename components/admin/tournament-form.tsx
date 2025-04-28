@@ -34,7 +34,6 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
     mode: tournament?.mode || "PvP",
     maxParticipants: tournament?.max_participants || 16,
     status: tournament?.status || "upcoming",
-    registrationStatus: tournament?.registration_status || "open",
     featured: tournament?.featured || false,
     registrationType: tournament?.registration_type || "free",
   })
@@ -174,17 +173,22 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
     setIsSubmitting(true)
     setMessage(null)
 
+    const formDataToSubmit = {
+      ...formData,
+      registrationStatus: undefined
+    };
+
     try {
       const result = isEditing
         ? await updateTournament({
             id: tournament.id,
-            ...formData,
+            ...formDataToSubmit,
             prizes: tournamentPrizes,
             rules: tournamentRules,
             htmlRules: currentHtmlRules,
           })
         : await createTournament({
-            ...formData,
+            ...formDataToSubmit,
             prizes: tournamentPrizes,
             rules: tournamentRules,
             htmlRules: currentHtmlRules,
@@ -196,7 +200,6 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
       })
 
       if (result.success && !isEditing) {
-        // Redirigir a la página de administración del torneo recién creado
         router.push(`/admin/torneos/${result.tournamentId}`)
       }
     } catch (error) {
@@ -368,35 +371,19 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
               </SelectTrigger>
               <SelectContent className="bg-black border-jade-800">
                 <SelectItem value="upcoming" className="focus:bg-jade-900/50 focus:text-jade-100">
-                  Próximamente
+                  Próximamente (Inscripciones abiertas)
                 </SelectItem>
                 <SelectItem value="active" className="focus:bg-jade-900/50 focus:text-jade-100">
-                  Activo
+                  Activo (Inscripciones cerradas)
                 </SelectItem>
                 <SelectItem value="completed" className="focus:bg-jade-900/50 focus:text-jade-100">
                   Completado
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="registrationStatus" className="text-jade-400">
-              Estado de las Inscripciones
-            </Label>
-            <Select value={formData.registrationStatus} onValueChange={(value) => handleSelectChange("registrationStatus", value)}>
-              <SelectTrigger className="bg-black/50 border-jade-800 focus:ring-jade-500/30">
-                <SelectValue placeholder="Selecciona el estado de inscripciones" />
-              </SelectTrigger>
-              <SelectContent className="bg-black border-jade-800">
-                <SelectItem value="open" className="focus:bg-jade-900/50 focus:text-jade-100">
-                  Abiertas
-                </SelectItem>
-                <SelectItem value="closed" className="focus:bg-jade-900/50 focus:text-jade-100">
-                  Cerradas
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <p className="text-xs text-gray-400 mt-1">
+              El estado "Próximamente" mantiene las inscripciones abiertas, mientras que "Activo" las cierra automáticamente.
+            </p>
           </div>
 
           <div className="flex items-center space-x-2 pt-2">

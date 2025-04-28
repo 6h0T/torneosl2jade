@@ -105,6 +105,7 @@ export async function getTournamentPrizes(tournamentId: number): Promise<Tournam
 // Funciones para equipos
 export async function getTeamsByTournament(tournamentId: number, status?: string): Promise<Team[]> {
   try {
+    console.log(`⚠️ Iniciando getTeamsByTournament para torneo ${tournamentId}, filtro status: ${status || "ninguno"}`)
     const supabase = createServerComponentClient()
     let query = supabase.from("teams").select("*, members:team_members(*)").eq("tournament_id", tournamentId)
 
@@ -118,6 +119,18 @@ export async function getTeamsByTournament(tournamentId: number, status?: string
     if (error) {
       console.error(`Error fetching teams for tournament ${tournamentId}:`, error)
       return []
+    }
+
+    console.log(`✅ getTeamsByTournament - Torneo ${tournamentId}: Encontrados ${data?.length || 0} equipos`)
+    if (data && data.length > 0) {
+      // Contar por status
+      const countByStatus = {
+        approved: data.filter(t => t.status === "approved").length,
+        pending: data.filter(t => t.status === "pending").length,
+        rejected: data.filter(t => t.status === "rejected").length,
+        expelled: data.filter(t => t.status === "expelled").length
+      }
+      console.log("Distribución de equipos:", countByStatus)
     }
 
     return data || []

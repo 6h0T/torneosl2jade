@@ -12,11 +12,13 @@ export default function HomeContent({
   upcomingTournaments,
   completedTournaments,
   activeParticipantsInfo,
+  upcomingParticipantsInfo,
 }: {
   activeTournaments: any[]
   upcomingTournaments: any[]
   completedTournaments: any[]
   activeParticipantsInfo: any[]
+  upcomingParticipantsInfo: any[]
 }) {
   const { t } = useLanguage()
 
@@ -32,19 +34,19 @@ export default function HomeContent({
         </p>
       </div>
 
-      <Tabs defaultValue="activos" className="w-full">
+      <Tabs defaultValue="proximos" className="w-full">
         <TabsList className="grid w-full md:w-[400px] grid-cols-3 mb-4 bg-black/80 border border-forest-800/30 mx-auto">
-          <TabsTrigger
-            value="activos"
-            className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
-          >
-            {t("active")}
-          </TabsTrigger>
           <TabsTrigger
             value="proximos"
             className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
           >
             {t("upcoming")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="activos"
+            className="data-[state=active]:bg-forest-900/80 data-[state=active]:text-forest-100"
+          >
+            {t("active")}
           </TabsTrigger>
           <TabsTrigger
             value="pasados"
@@ -53,6 +55,36 @@ export default function HomeContent({
             {t("past")}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="proximos" className="mt-0 flex justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 max-w-4xl">
+            {upcomingTournaments.length > 0 ? (
+              upcomingTournaments.map((tournament) => {
+                const participantInfo = upcomingParticipantsInfo.find((info) => info.id === tournament.id)
+                const participants = participantInfo ? `${participantInfo.count}/${participantInfo.max}` : "0/32"
+                
+                return (
+                  <TournamentCard
+                    key={tournament.id}
+                    id={tournament.id.toString()}
+                    title={tournament.title}
+                    description={tournament.description}
+                    date={tournament.date_range}
+                    participants={participants}
+                    status={t("upcoming")}
+                    prize={tournament.prize}
+                    featured={tournament.featured}
+                    tournament={tournament}
+                  />
+                )
+              })
+            ) : (
+              <div className="bg-black/80 backdrop-blur-sm border border-forest-800/30 rounded-lg p-6 text-center col-span-2">
+                <p className="text-gray-400">{t("noUpcomingTournaments")}</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
         <TabsContent value="activos" className="mt-0 flex justify-center">
           <div className="max-w-md w-full">
@@ -80,31 +112,6 @@ export default function HomeContent({
             ) : (
               <div className="bg-black/80 backdrop-blur-sm border border-forest-800/30 rounded-lg p-6 text-center">
                 <p className="text-gray-400">{t("noActiveTournaments")}</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="proximos" className="mt-0 flex justify-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 max-w-4xl">
-            {upcomingTournaments.length > 0 ? (
-              upcomingTournaments.map((tournament) => (
-                <TournamentCard
-                  key={tournament.id}
-                  id={tournament.id.toString()}
-                  title={tournament.title}
-                  description={tournament.description}
-                  date={tournament.date_range}
-                  participants="0/32"
-                  status={t("upcoming")}
-                  prize={tournament.prize}
-                  featured={tournament.featured}
-                  tournament={tournament}
-                />
-              ))
-            ) : (
-              <div className="bg-black/80 backdrop-blur-sm border border-forest-800/30 rounded-lg p-6 text-center col-span-2">
-                <p className="text-gray-400">{t("noUpcomingTournaments")}</p>
               </div>
             )}
           </div>

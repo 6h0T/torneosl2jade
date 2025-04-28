@@ -19,7 +19,7 @@ import type { Match as MatchType, Team as TeamType, TeamMember as TeamMemberType
 import RefreshButton from "@/components/refresh-button"
 import AuthCheck from "@/components/admin/auth-check"
 import BracketActions from "@/components/admin/bracket-actions"
-import { checkAndCloseRegistration } from "@/lib/supabase/admin-actions"
+import { checkAndCloseRegistration, updateTournamentStatus, toggleTournamentMode } from "@/lib/supabase/admin-actions"
 
 import { generateBracketAction, deleteMatchesAction } from "./actions"
 
@@ -128,6 +128,31 @@ export default async function AdminTournamentPage({ params, searchParams }: Page
                   "El torneo está en curso. Puedes gestionar los partidos en las pestañas correspondientes."
                 )}
               </p>
+              
+              {/* Información de depuración */}
+              <details className="mt-3 text-xs text-gray-400">
+                <summary>Información técnica del torneo (debug)</summary>
+                <pre className="mt-2 p-2 bg-black/80 rounded overflow-auto max-h-60">
+                  {JSON.stringify(tournament, null, 2)}
+                </pre>
+                <div className="mt-2">
+                  <p>Equipos cargados:</p>
+                  <ul className="list-disc pl-5">
+                    <li>Total: {teams.length}</li>
+                    <li>Pendientes: {pendingTeams.length}</li>
+                    <li>Aprobados: {approvedTeams.length}</li>
+                    <li>Rechazados: {rejectedTeams.length}</li>
+                    <li>Expulsados: {expelledTeams.length}</li>
+                  </ul>
+                  <p className="mt-2">ID de equipos aprobados:</p>
+                  <pre className="p-2 bg-black/80 rounded overflow-auto max-h-40">
+                    {JSON.stringify(approvedTeams.map(team => ({ id: team.id, name: team.name })), null, 2)}
+                  </pre>
+                  <p className="mt-2 text-yellow-400">
+                    Si ves que los contadores no coinciden con los equipos visibles, intenta recargar la página manualmente (Ctrl+R)
+                  </p>
+                </div>
+              </details>
             </div>
           </div>
         </div>
@@ -138,10 +163,10 @@ export default async function AdminTournamentPage({ params, searchParams }: Page
             <div>
               <p className="text-jade-200 font-medium">
                 Estado de inscripciones: 
-                <span className={tournament.registration_status === "open" 
+                <span className={tournament.status === "upcoming" 
                   ? "text-green-400 ml-2" 
                   : "text-amber-400 ml-2"}>
-                  {tournament.registration_status === "open" ? "Abiertas" : "Cerradas"}
+                  {tournament.status === "upcoming" ? "Abiertas" : "Cerradas"}
                 </span>
               </p>
               <p className="text-gray-300 text-sm mt-1">
@@ -155,16 +180,20 @@ export default async function AdminTournamentPage({ params, searchParams }: Page
             </div>
             <form action={async () => {
               "use server"
-              await checkAndCloseRegistration(tournamentId)
+              // Usar la nueva función que solo alterna el estado del torneo
+              const result = await toggleTournamentMode(tournamentId)
+              if (!result.success) {
+                console.error("Error al actualizar el estado de las inscripciones:", result.message)
+              }
               redirect(`/admin/torneos/${tournamentId}?t=${Date.now()}`)
             }}>
               <Button
                 type="submit"
-                className={tournament.registration_status === "open"
+                className={tournament.status === "upcoming"
                   ? "bg-amber-600 hover:bg-amber-500"
                   : "bg-green-600 hover:bg-green-500"}
               >
-                {tournament.registration_status === "open"
+                {tournament.status === "upcoming"
                   ? "Cerrar inscripciones"
                   : "Abrir inscripciones"}
               </Button>

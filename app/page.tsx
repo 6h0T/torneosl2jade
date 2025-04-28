@@ -8,9 +8,21 @@ export default async function Home() {
   const upcomingTournaments = await getTournaments("upcoming")
   const completedTournaments = await getTournaments("completed")
 
-  // Obtener información de participantes para torneos activos
+  // Obtener información de participantes para torneos activos y próximos
   const activeParticipantsInfo = await Promise.all(
     activeTournaments.map(async (tournament) => {
+      const teams = await getTeamsByTournament(tournament.id, "approved")
+      return {
+        id: tournament.id,
+        count: teams.length,
+        max: tournament.max_participants || 32,
+      }
+    }),
+  )
+
+  // Obtener información de participantes para torneos próximos
+  const upcomingParticipantsInfo = await Promise.all(
+    upcomingTournaments.map(async (tournament) => {
       const teams = await getTeamsByTournament(tournament.id, "approved")
       return {
         id: tournament.id,
@@ -27,6 +39,7 @@ export default async function Home() {
         upcomingTournaments={upcomingTournaments}
         completedTournaments={completedTournaments}
         activeParticipantsInfo={activeParticipantsInfo}
+        upcomingParticipantsInfo={upcomingParticipantsInfo}
       />
     </PageLayout>
   )

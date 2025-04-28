@@ -19,6 +19,7 @@ import type { Match as MatchType, Team as TeamType, TeamMember as TeamMemberType
 import RefreshButton from "@/components/refresh-button"
 import AuthCheck from "@/components/admin/auth-check"
 import BracketActions from "@/components/admin/bracket-actions"
+import { checkAndCloseRegistration } from "@/lib/supabase/admin-actions"
 
 import { generateBracketAction, deleteMatchesAction } from "./actions"
 
@@ -128,6 +129,46 @@ export default async function AdminTournamentPage({ params, searchParams }: Page
                 )}
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Información y gestión de inscripciones */}
+        <div className="mb-6 p-4 bg-black/50 border border-jade-800/30 rounded-md">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-jade-200 font-medium">
+                Estado de inscripciones: 
+                <span className={tournament.registration_status === "open" 
+                  ? "text-green-400 ml-2" 
+                  : "text-amber-400 ml-2"}>
+                  {tournament.registration_status === "open" ? "Abiertas" : "Cerradas"}
+                </span>
+              </p>
+              <p className="text-gray-300 text-sm mt-1">
+                Cupo: {approvedTeams.length} de {tournament.max_participants} equipos
+                {approvedTeams.length >= tournament.max_participants && (
+                  <span className="text-amber-400 ml-2">
+                    El torneo está lleno
+                  </span>
+                )}
+              </p>
+            </div>
+            <form action={async () => {
+              "use server"
+              await checkAndCloseRegistration(tournamentId)
+              redirect(`/admin/torneos/${tournamentId}?t=${Date.now()}`)
+            }}>
+              <Button
+                type="submit"
+                className={tournament.registration_status === "open"
+                  ? "bg-amber-600 hover:bg-amber-500"
+                  : "bg-green-600 hover:bg-green-500"}
+              >
+                {tournament.registration_status === "open"
+                  ? "Cerrar inscripciones"
+                  : "Abrir inscripciones"}
+              </Button>
+            </form>
           </div>
         </div>
 

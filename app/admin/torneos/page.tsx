@@ -1,5 +1,5 @@
 import { getTournaments } from "@/lib/supabase/actions"
-import { updateTournamentStatus } from "@/lib/supabase/admin"
+import { updateTournamentStatus } from "@/lib/supabase/admin-actions"
 
 export default async function AdminTournamentsPage() {
   const tournaments = await getTournaments()

@@ -5,6 +5,7 @@ export interface Tournament {
   description: string
   date_range: string
   status: "upcoming" | "active" | "completed"
+  registration_status: "open" | "closed"
   prize: string
   format: string
   mode: string

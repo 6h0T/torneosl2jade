@@ -34,6 +34,7 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
     mode: tournament?.mode || "PvP",
     maxParticipants: tournament?.max_participants || 16,
     status: tournament?.status || "upcoming",
+    registrationStatus: tournament?.registration_status || "open",
     featured: tournament?.featured || false,
     registrationType: tournament?.registration_type || "free",
   })
@@ -359,13 +360,9 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
 
           <div>
             <Label htmlFor="status" className="text-jade-400">
-              Estado
+              Estado del Torneo
             </Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => handleSelectChange("status", value)}
-              name="status"
-            >
+            <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)} name="status">
               <SelectTrigger className="bg-black/50 border-jade-800 focus:ring-jade-500/30">
                 <SelectValue placeholder="Selecciona el estado" />
               </SelectTrigger>
@@ -378,6 +375,25 @@ export default function TournamentForm({ tournament, prizes = [], rules = [], ht
                 </SelectItem>
                 <SelectItem value="completed" className="focus:bg-jade-900/50 focus:text-jade-100">
                   Completado
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="registrationStatus" className="text-jade-400">
+              Estado de las Inscripciones
+            </Label>
+            <Select value={formData.registrationStatus} onValueChange={(value) => handleSelectChange("registrationStatus", value)}>
+              <SelectTrigger className="bg-black/50 border-jade-800 focus:ring-jade-500/30">
+                <SelectValue placeholder="Selecciona el estado de inscripciones" />
+              </SelectTrigger>
+              <SelectContent className="bg-black border-jade-800">
+                <SelectItem value="open" className="focus:bg-jade-900/50 focus:text-jade-100">
+                  Abiertas
+                </SelectItem>
+                <SelectItem value="closed" className="focus:bg-jade-900/50 focus:text-jade-100">
+                  Cerradas
                 </SelectItem>
               </SelectContent>
             </Select>

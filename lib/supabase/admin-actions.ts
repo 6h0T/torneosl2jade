@@ -14,6 +14,7 @@ export async function createTournament(data: {
   mode: string
   maxParticipants: number
   status: string
+  registrationStatus: string
   featured: boolean
   registrationType: string
   prizes: Array<{
@@ -51,6 +52,7 @@ export async function createTournament(data: {
           mode: data.mode,
           max_participants: data.maxParticipants,
           status: data.status,
+          registration_status: data.registrationStatus,
           featured: data.featured,
           registration_type: data.registrationType,
           html_rules: data.htmlRules || null, // Store HTML rules
@@ -132,6 +134,7 @@ export async function updateTournament(data: {
   mode: string
   maxParticipants: number
   status: string
+  registrationStatus: string
   featured: boolean
   registrationType: string
   prizes: Array<{
@@ -170,6 +173,7 @@ export async function updateTournament(data: {
         mode: data.mode,
         max_participants: data.maxParticipants,
         status: data.status,
+        registration_status: data.registrationStatus,
         featured: data.featured,
         registration_type: data.registrationType,
         html_rules: data.htmlRules || null, // Update HTML rules
@@ -724,7 +728,7 @@ async function updateTeamRankings(winnerId: number, loserId: number, phase: stri
   }
 }
 
-// Modificar la función approveTeam para verificar el estado del torneo después de aprobar
+// Función para aprobar un equipo
 export async function approveTeam(teamId: number, tournamentId: number) {
   try {
     const supabase = createServerComponentClient()
@@ -736,8 +740,53 @@ export async function approveTeam(teamId: number, tournamentId: number) {
       }
     }
 
-    // Actualizar el estado del equipo a "approved"
-    const { error } = await supabase
+    // Verificar si el torneo tiene las inscripciones abiertas
+    const { data: tournament, error: tournamentError } = await supabase
+      .from("tournaments")
+      .select("registration_status, max_participants")
+      .eq("id", tournamentId)
+      .single()
+
+    if (tournamentError) {
+      console.error("Error fetching tournament:", tournamentError)
+      return {
+        success: false,
+        message: "Error al verificar el estado del torneo.",
+      }
+    }
+
+    if (tournament.registration_status === "closed") {
+      return {
+        success: false,
+        message: "No se puede aprobar el equipo porque las inscripciones están cerradas.",
+      }
+    }
+
+    // Verificar cuántos equipos aprobados hay actualmente
+    const { data: approvedTeams, error: teamsError } = await supabase
+      .from("teams")
+      .select("id")
+      .eq("tournament_id", tournamentId)
+      .eq("status", "approved")
+
+    if (teamsError) {
+      console.error("Error fetching approved teams:", teamsError)
+      return {
+        success: false,
+        message: "Error al verificar los equipos aprobados.",
+      }
+    }
+
+    // Verificar si el torneo está lleno
+    if (approvedTeams && approvedTeams.length >= tournament.max_participants) {
+      return {
+        success: false,
+        message: `No se puede aprobar el equipo porque el torneo ya está lleno (${tournament.max_participants} equipos).`,
+      }
+    }
+
+    // Aprobar el equipo
+    const { error: updateError } = await supabase
       .from("teams")
       .update({
         status: "approved",
@@ -745,31 +794,47 @@ export async function approveTeam(teamId: number, tournamentId: number) {
       })
       .eq("id", teamId)
 
-    if (error) {
-      console.error("Error al aprobar equipo:", error)
+    if (updateError) {
+      console.error("Error approving team:", updateError)
       return {
         success: false,
-        message: "Error al aprobar el equipo.",
+        message: "Error al aprobar el equipo: " + updateError.message,
       }
     }
 
-    // Verificar y actualizar el estado del torneo si es necesario
-    await checkAndUpdateTournamentStatus(tournamentId)
+    // Verificar si con esta aprobación el torneo queda lleno
+    const willBeFull = approvedTeams.length + 1 >= tournament.max_participants
 
-    // Revalidar las páginas
+    // Si el torneo queda lleno, cerrar inscripciones automáticamente
+    if (willBeFull) {
+      const { error: closeError } = await supabase
+        .from("tournaments")
+        .update({ registration_status: "closed" })
+        .eq("id", tournamentId)
+
+      if (closeError) {
+        console.error("Error closing registrations:", closeError)
+        // No interrumpimos la operación si falla el cierre de inscripciones
+      }
+    }
+
+    // Revalidar las rutas necesarias
+    revalidatePath("/admin")
+    revalidatePath("/")
     revalidatePath(`/torneos/${tournamentId}`)
     revalidatePath(`/admin/torneos/${tournamentId}`)
-    revalidatePath("/")
 
     return {
       success: true,
-      message: "Equipo aprobado correctamente.",
+      message: willBeFull 
+        ? "Equipo aprobado exitosamente. El torneo está ahora lleno y las inscripciones se han cerrado automáticamente."
+        : "Equipo aprobado exitosamente.",
     }
   } catch (error) {
-    console.error("Error al aprobar equipo:", error)
+    console.error("Error:", error)
     return {
       success: false,
-      message: "Error inesperado al aprobar el equipo.",
+      message: "Error inesperado al aprobar el equipo",
     }
   }
 }
@@ -1244,6 +1309,140 @@ export async function deleteTournament(tournamentId: number) {
     return {
       success: false,
       message: "Error inesperado al borrar el torneo",
+    }
+  }
+}
+
+// Función para verificar cupos y cerrar inscripciones si el torneo está lleno
+export async function checkAndCloseRegistration(tournamentId: number) {
+  try {
+    const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
+
+    // Obtener información del torneo
+    const { data: tournament, error: tournamentError } = await supabase
+      .from("tournaments")
+      .select("*")
+      .eq("id", tournamentId)
+      .single()
+
+    if (tournamentError || !tournament) {
+      console.error("Error fetching tournament:", tournamentError)
+      return {
+        success: false,
+        message: "Error al obtener información del torneo.",
+      }
+    }
+
+    // Obtener equipos aprobados
+    const { data: approvedTeams, error: teamsError } = await supabase
+      .from("teams")
+      .select("id")
+      .eq("tournament_id", tournamentId)
+      .eq("status", "approved")
+
+    if (teamsError) {
+      console.error("Error fetching teams:", teamsError)
+      return {
+        success: false,
+        message: "Error al obtener equipos del torneo.",
+      }
+    }
+
+    // Verificar si el torneo está lleno
+    const isFull = approvedTeams && approvedTeams.length >= tournament.max_participants
+
+    // Si el torneo está lleno y las inscripciones están abiertas, cerrarlas
+    if (isFull && tournament.registration_status === "open") {
+      const { error: updateError } = await supabase
+        .from("tournaments")
+        .update({ registration_status: "closed" })
+        .eq("id", tournamentId)
+
+      if (updateError) {
+        console.error("Error closing tournament registrations:", updateError)
+        return {
+          success: false,
+          message: "Error al cerrar las inscripciones del torneo.",
+        }
+      }
+
+      // Revalidar las rutas necesarias
+      revalidatePath("/admin")
+      revalidatePath("/")
+      revalidatePath(`/torneos/${tournamentId}`)
+      revalidatePath(`/admin/torneos/${tournamentId}`)
+
+      return {
+        success: true,
+        message: "Inscripciones cerradas automáticamente porque el torneo está lleno.",
+      }
+    }
+
+    return {
+      success: true,
+      message: "No es necesario cerrar las inscripciones todavía.",
+      isFull,
+      currentCount: approvedTeams ? approvedTeams.length : 0,
+      maxParticipants: tournament.max_participants
+    }
+  } catch (error) {
+    console.error("Error:", error)
+    return {
+      success: false,
+      message: "Error inesperado al verificar el estado de las inscripciones.",
+    }
+  }
+}
+
+// Función para actualizar el estado de un torneo directamente
+export async function updateTournamentStatus(tournamentId: number, newStatus: string) {
+  try {
+    const supabase = createServerComponentClient()
+    
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error al conectar con Supabase.",
+      }
+    }
+
+    // Actualizar el estado del torneo
+    const { error } = await supabase
+      .from("tournaments")
+      .update({ status: newStatus })
+      .eq("id", tournamentId)
+
+    if (error) {
+      console.error("Error updating tournament status:", error)
+      return {
+        success: false,
+        message: "Error al actualizar el estado del torneo: " + error.message,
+      }
+    }
+
+    // Revalidar las rutas necesarias
+    revalidatePath("/admin")
+    revalidatePath("/")
+    revalidatePath(`/torneos/${tournamentId}`)
+    revalidatePath(`/admin/torneos/${tournamentId}`)
+    revalidatePath("/admin/torneos")
+
+    return {
+      success: true,
+      message: `Estado del torneo actualizado a '${newStatus}'.`,
+    }
+  } catch (error) {
+    console.error("Error:", error)
+    return {
+      success: false,
+      message: "Error inesperado al actualizar el estado del torneo.",
     }
   }
 }

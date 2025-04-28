@@ -192,6 +192,40 @@ export async function registerTeam(formData: FormData) {
       }
     }
 
+    // Verificar si las inscripciones están abiertas
+    if (activeTournament.registration_status === "closed") {
+      return {
+        success: false,
+        message: "Las inscripciones para este torneo están cerradas.",
+      }
+    }
+
+    // Verificar si el torneo está lleno
+    const supabase = createServerComponentClient()
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Error de conexión con la base de datos. Por favor, inténtalo de nuevo.",
+      }
+    }
+
+    // Contar equipos aprobados
+    const { data: approvedTeams, error: countError } = await supabase
+      .from("teams")
+      .select("id")
+      .eq("tournament_id", activeTournament.id)
+      .eq("status", "approved")
+
+    if (countError) {
+      console.error("Error al verificar cupo:", countError)
+      // No interrumpimos el registro si falla la verificación
+    } else if (approvedTeams && approvedTeams.length >= activeTournament.max_participants) {
+      return {
+        success: false,
+        message: "Lo sentimos, el torneo ya está lleno. No se pueden aceptar más registros.",
+      }
+    }
+
     // Obtener datos de los miembros del equipo según el tipo de torneo
     const member1Name = formData.get("member1Name") as string
     const member1Class = (formData.get("member1Class") as string) || "No especificada"
@@ -226,15 +260,6 @@ export async function registerTeam(formData: FormData) {
           success: false,
           message: "Por favor, completa todos los campos obligatorios.",
         }
-      }
-    }
-
-    // Crear cliente de Supabase
-    const supabase = createServerComponentClient()
-    if (!supabase) {
-      return {
-        success: false,
-        message: "Error de conexión con la base de datos. Por favor, inténtalo de nuevo.",
       }
     }
 
